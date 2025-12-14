@@ -2,15 +2,15 @@
 <html lang="es">
 <!-- 
   ============================================
-  CODEHUBBER - HOME.HTML v2.2
-  Última actualización: 14/12/2024 - 20:30
-  Incluye: Botón Eliminar + Edición Inline
+  CODEHUBBER - HOME.HTML v2.4
+  Última actualización: 14/12/2024 - 23:30
+  Mejora: Botón Guardar Links ahora guarda Raw LinkList URL + SolidLink
   ============================================
 -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CodeHubber v2.2</title>
+  <title>CodeHubber v2.4</title>
   
   <style>
     * {
@@ -135,20 +135,6 @@
     .project-name {
       flex: 1;
       font-size: 14px;
-    }
-
-    .project-name-editable {
-      background: #0d1117;
-      border: 1px solid #58a6ff;
-      border-radius: 4px;
-      padding: 4px 8px;
-      color: #c9d1d9;
-      font-size: 14px;
-      width: 100%;
-    }
-
-    .project-name-editable:focus {
-      outline: none;
     }
 
     /* MAIN CONTENT */
@@ -391,6 +377,17 @@
       color: #f85149;
       font-weight: 600;
     }
+
+    /* INFO BOX */
+    .info-box {
+      background: #1f6feb20;
+      border: 1px solid #1f6feb;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #58a6ff;
+    }
   </style>
 </head>
 <body>
@@ -413,6 +410,7 @@
       <!-- TABS -->
       <div class="tabs">
         <div class="tab active" data-tab="solidcode" onclick="cambiarTab('solidcode')">🔧 SolidCode</div>
+        <div class="tab" data-tab="linklist" onclick="cambiarTab('linklist')">🔗 LinkList</div>
         <div class="tab" data-tab="info" onclick="cambiarTab('info')">ℹ️ Info</div>
       </div>
 
@@ -434,15 +432,13 @@
             <div class="form-group">
               <label>🔗 Raw LinkList URL (GitHub Gist/Raw)</label>
               <input type="text" id="rawLinkList" placeholder="https://gist.githubusercontent.com/...">
-              <div class="button-group">
-                <button class="btn btn-primary" onclick="generarSolidCode()">⚡ Generar SolidCode</button>
-              </div>
             </div>
 
             <div class="form-group">
               <label>📄 SolidCode Generado</label>
               <textarea id="solidCode" readonly></textarea>
               <div class="button-group">
+                <button class="btn btn-primary" onclick="generarSolidCode()">⚡ Generar SolidCode</button>
                 <button class="btn btn-secondary" onclick="cargarSolidCodeDeDoc()">📥 Cargar desde Google Doc</button>
                 <button class="btn btn-secondary" onclick="abrirGoogleDoc()">📝 Abrir Google Doc</button>
                 <button class="btn btn-secondary" onclick="copiarAlPortapapeles('solidCode')">📋 Copiar</button>
@@ -453,14 +449,43 @@
               <label>🔗 Link a SolidCode (Compartir)</label>
               <input type="text" id="solidLinkSC">
               <div class="button-group">
-                <button class="btn btn-primary" onclick="guardarCampo('solidLink')">💾 Guardar</button>
+                <button class="btn btn-primary" onclick="guardarCampoSolidCode()">💾 Guardar Links</button>
                 <button class="btn btn-secondary" onclick="copiarAlPortapapeles('solidLinkSC')">📋 Copiar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: LINKLIST (NUEVO) -->
+          <div id="tab-linklist" class="tab-content">
+            <div class="info-box">
+              ℹ️ Esta es una herramienta utilitaria. Genera el LinkList desde un repositorio de GitHub y cópialo para usarlo después.
+            </div>
+
+            <div class="form-group">
+              <label>🌐 GitHub Tree URL</label>
+              <input type="text" id="githubTreeUrl" placeholder="https://github.com/usuario/repo/tree/main">
+            </div>
+
+            <div class="button-group">
+              <button class="btn btn-primary" onclick="generarLinkListDesdeGitHub()">⚡ Generar LinkList</button>
+            </div>
+
+            <div class="form-group">
+              <label>📋 LinkList Generado <span id="linkListCount" style="color: #58a6ff;"></span></label>
+              <textarea id="linkListGenerado" readonly placeholder="Aquí aparecerá el LinkList generado..."></textarea>
+              <div class="button-group">
+                <button class="btn btn-secondary" onclick="copiarAlPortapapeles('linkListGenerado')">📋 Copiar Todo</button>
               </div>
             </div>
           </div>
 
           <!-- TAB: INFO -->
           <div id="tab-info" class="tab-content">
+            <div class="form-group">
+              <label>📝 Nombre del Proyecto</label>
+              <input type="text" id="nombreProyecto" placeholder="Nombre del proyecto">
+            </div>
+
             <div class="form-group">
               <label>🔗 Link SolidCode</label>
               <input type="text" id="solidLinkInfo">
@@ -483,7 +508,7 @@
             </div>
 
             <div class="button-group">
-              <button class="btn btn-primary" onclick="guardarCampo('info')">💾 Guardar Todo</button>
+              <button class="btn btn-primary" onclick="guardarCampoInfo()">💾 Guardar Todo</button>
             </div>
           </div>
 
@@ -531,7 +556,7 @@
   </div>
 
   <script>
-    console.log('=== CODEHUBBER v2.2 INICIANDO ===');
+    console.log('=== CODEHUBBER v2.4 INICIANDO ===');
     let proyectos = [];
     let proyectoActual = null;
 
@@ -607,15 +632,6 @@
         const nameContainer = document.createElement('div');
         nameContainer.className = 'project-name';
         nameContainer.textContent = proyecto.nombre;
-        nameContainer.setAttribute('data-row-index', proyecto.rowIndex);
-        nameContainer.setAttribute('data-nombre', proyecto.nombre);
-        nameContainer.style.cursor = 'text';
-        
-        // Evento para editar nombre al hacer clic
-        nameContainer.addEventListener('click', (e) => {
-          e.stopPropagation();
-          iniciarEdicionNombre(nameContainer);
-        });
 
         item.appendChild(orderInput);
         item.appendChild(nameContainer);
@@ -623,78 +639,6 @@
 
         list.appendChild(item);
       });
-    }
-
-    function iniciarEdicionNombre(nameContainer) {
-      const rowIndex = parseInt(nameContainer.getAttribute('data-row-index'));
-      const nombreActual = nameContainer.getAttribute('data-nombre');
-      
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'project-name-editable';
-      input.value = nombreActual;
-      
-      nameContainer.innerHTML = '';
-      nameContainer.appendChild(input);
-      input.focus();
-      input.select();
-      
-      // Guardar al presionar Enter
-      input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          guardarNombreEditado(nameContainer, rowIndex, input.value.trim());
-        }
-      });
-      
-      // Guardar al perder el foco (clic fuera)
-      input.addEventListener('blur', () => {
-        guardarNombreEditado(nameContainer, rowIndex, input.value.trim());
-      });
-      
-      // Cancelar al presionar Escape
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          nameContainer.textContent = nombreActual;
-          nameContainer.setAttribute('data-nombre', nombreActual);
-        }
-      });
-    }
-
-    function guardarNombreEditado(nameContainer, rowIndex, nuevoNombre) {
-      if (!nuevoNombre || nuevoNombre === '') {
-        mostrarMensaje('El nombre no puede estar vacío', 'error');
-        nameContainer.textContent = nameContainer.getAttribute('data-nombre');
-        return;
-      }
-      
-      const nombreAnterior = nameContainer.getAttribute('data-nombre');
-      
-      if (nuevoNombre === nombreAnterior) {
-        nameContainer.textContent = nombreAnterior;
-        return;
-      }
-      
-      google.script.run
-        .withSuccessHandler(function(proyecto) {
-          nameContainer.textContent = nuevoNombre;
-          nameContainer.setAttribute('data-nombre', nuevoNombre);
-          
-          if (proyectoActual && proyectoActual.rowIndex === rowIndex) {
-            proyectoActual.nombre = nuevoNombre;
-          }
-          
-          const proyectoIndex = proyectos.findIndex(p => p.rowIndex === rowIndex);
-          if (proyectoIndex !== -1) {
-            proyectos[proyectoIndex].nombre = nuevoNombre;
-          }
-          
-          mostrarMensaje('Nombre actualizado correctamente', 'success');
-        })
-        .withFailureHandler(function(error) {
-          nameContainer.textContent = nombreAnterior;
-          mostrarError(error);
-        })
-        .actualizarCampo(rowIndex, 'nombre', nuevoNombre);
     }
 
     function seleccionarProyecto(rowIndex) {
@@ -713,8 +657,12 @@
       document.getElementById('emptyState').style.display = 'none';
       document.getElementById('projectContent').style.display = 'block';
 
+      // Pestaña SolidCode
       document.getElementById('rawLinkList').value = proyectoActual.linkList || '';
       document.getElementById('solidLinkSC').value = proyectoActual.solidLink || '';
+      
+      // Pestaña Info
+      document.getElementById('nombreProyecto').value = proyectoActual.nombre || '';
       document.getElementById('solidLinkInfo').value = proyectoActual.solidLink || '';
       document.getElementById('appWebLink').value = proyectoActual.appWebLink || '';
       document.getElementById('info').value = proyectoActual.info || '';
@@ -809,52 +757,82 @@
         .reordenarProyecto(rowIndex, nuevoOrden);
     }
 
-    function guardarCampo(campo) {
+    // GUARDAR PESTAÑA SOLIDCODE
+    function guardarCampoSolidCode() {
       if (!proyectoActual) return;
 
-      let valor;
-      let campoSheet;
+      const rawLinkList = document.getElementById('rawLinkList').value;
+      const solidLink = document.getElementById('solidLinkSC').value;
 
-      switch(campo) {
-        case 'solidLink':
-          valor = document.getElementById('solidLinkSC').value;
-          campoSheet = 'solidLink';
-          break;
-        case 'info':
-          valor = document.getElementById('info').value;
-          campoSheet = 'info';
-          const appWebLink = document.getElementById('appWebLink').value;
-          const solidLinkInfo = document.getElementById('solidLinkInfo').value;
-          guardarAppWebLink(appWebLink);
-          guardarSolidLink(solidLinkInfo);
-          break;
-      }
-
+      // Guardar Raw LinkList URL
       google.script.run
         .withSuccessHandler(function(proyecto) {
-          proyectoActual = proyecto;
-          mostrarMensaje('Guardado exitosamente', 'success');
+          proyectoActual.linkList = proyecto.linkList;
         })
         .withFailureHandler(mostrarError)
-        .actualizarCampo(proyectoActual.rowIndex, campoSheet, valor);
-    }
+        .actualizarCampo(proyectoActual.rowIndex, 'linkList', rawLinkList);
 
-    function guardarSolidLink(valor) {
+      // Guardar SolidLink
       google.script.run
         .withSuccessHandler(function(proyecto) {
-          proyectoActual = proyecto;
+          proyectoActual.solidLink = proyecto.solidLink;
+          document.getElementById('solidLinkSC').value = proyecto.solidLink;
+          document.getElementById('solidLinkInfo').value = proyecto.solidLink;
+          mostrarMensaje('Links guardados exitosamente', 'success');
+        })
+        .withFailureHandler(mostrarError)
+        .actualizarCampo(proyectoActual.rowIndex, 'solidLink', solidLink);
+    }
+
+    // GUARDAR PESTAÑA INFO
+    function guardarCampoInfo() {
+      if (!proyectoActual) return;
+
+      const nombre = document.getElementById('nombreProyecto').value.trim();
+      const solidLinkInfo = document.getElementById('solidLinkInfo').value;
+      const appWebLink = document.getElementById('appWebLink').value;
+      const info = document.getElementById('info').value;
+
+      if (!nombre) {
+        mostrarMensaje('El nombre del proyecto no puede estar vacío', 'error');
+        return;
+      }
+
+      // Guardar nombre
+      google.script.run
+        .withSuccessHandler(function(proyecto) {
+          proyectoActual.nombre = proyecto.nombre;
+          renderizarProyectos();
+        })
+        .withFailureHandler(mostrarError)
+        .actualizarCampo(proyectoActual.rowIndex, 'nombre', nombre);
+
+      // Guardar solidLink
+      google.script.run
+        .withSuccessHandler(function(proyecto) {
+          proyectoActual.solidLink = proyecto.solidLink;
           document.getElementById('solidLinkSC').value = proyecto.solidLink;
           document.getElementById('solidLinkInfo').value = proyecto.solidLink;
         })
-        .actualizarCampo(proyectoActual.rowIndex, 'solidLink', valor);
-    }
+        .withFailureHandler(mostrarError)
+        .actualizarCampo(proyectoActual.rowIndex, 'solidLink', solidLinkInfo);
 
-    function guardarAppWebLink(valor) {
+      // Guardar appWebLink
       google.script.run
         .withSuccessHandler(function(proyecto) {
-          proyectoActual = proyecto;
+          proyectoActual.appWebLink = proyecto.appWebLink;
         })
-        .actualizarCampo(proyectoActual.rowIndex, 'appWebLink', valor);
+        .withFailureHandler(mostrarError)
+        .actualizarCampo(proyectoActual.rowIndex, 'appWebLink', appWebLink);
+
+      // Guardar info
+      google.script.run
+        .withSuccessHandler(function(proyecto) {
+          proyectoActual.info = proyecto.info;
+          mostrarMensaje('Información guardada exitosamente', 'success');
+        })
+        .withFailureHandler(mostrarError)
+        .actualizarCampo(proyectoActual.rowIndex, 'info', info);
     }
 
     function generarSolidCode() {
@@ -912,6 +890,31 @@
       
       const docUrl = 'https://docs.google.com/document/d/' + proyectoActual.solidCode + '/edit';
       window.open(docUrl, '_blank');
+    }
+
+    // PESTAÑA LINKLIST - GENERAR DESDE GITHUB
+    function generarLinkListDesdeGitHub() {
+      const githubTreeUrl = document.getElementById('githubTreeUrl').value.trim();
+      
+      if (!githubTreeUrl) {
+        mostrarMensaje('Debes ingresar la URL del GitHub Tree', 'error');
+        return;
+      }
+
+      mostrarMensaje('Generando LinkList desde GitHub...', 'success');
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            document.getElementById('linkListGenerado').value = result.linkList;
+            document.getElementById('linkListCount').textContent = '(' + result.totalArchivos + ' archivos)';
+            mostrarMensaje('LinkList generado correctamente: ' + result.totalArchivos + ' archivo(s)', 'success');
+          } else {
+            mostrarMensaje('Error al generar LinkList', 'error');
+          }
+        })
+        .withFailureHandler(mostrarError)
+        .generarLinkListDesdeTree(githubTreeUrl);
     }
 
     function copiarAlPortapapeles(elementId) {
