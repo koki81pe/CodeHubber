@@ -1,7 +1,7 @@
 // ============================================
-// CODEHUBBER v2.2 - CODE.GS
-// Última actualización: 14/12/2024
-// Cambios: Manejo robusto de parámetros y validaciones mejoradas
+// CODEHUBBER v2.3 - CODE.GS
+// Última actualización: 14/12/2024 - 22:00
+// Nuevo: Generador de LinkList desde GitHub Tree API
 // ============================================
 
 const SPREADSHEET_ID = '1PqTYY7dOVicyhTt84y3FTMV7giJjvTy7aNqzGItZK54';
@@ -569,53 +569,313 @@ function cargarSolidCodeDeDoc(rowIndex) {
   }
 }
 
-// ... (todo tu código anterior)
+// ============================================
+// GENERADOR DE LINKLIST DESDE GITHUB TREE (NUEVO)
+// ============================================
 
-function cargarSolidCodeDeDoc(rowIndex) {
-  // ... última función del código original
+function generarLinkListDesdeTree(treeUrl) {
+  try {
+    // Validar que sea una URL de GitHub válida
+    if (!treeUrl || !treeUrl.includes('github.com')) {
+      throw new Error('Debes proporcionar una URL válida de GitHub');
+    }
+    
+    // Extraer usuario, repositorio y branch del URL
+    const parts = extraerInfoGitHub(treeUrl);
+    
+    if (!parts.user || !parts.repo || !parts.branch) {
+      throw new Error('URL de GitHub inválida. Formato: https://github.com/usuario/repo/tree/branch');
+    }
+    
+    // Construir URL de la API de GitHub
+    const apiUrl = 'https://api.github.com/repos/' + parts.user + '/' + parts.repo + '/git/trees/' + parts.branch + '?recursive=1';
+    
+    Logger.log('Consultando API de GitHub: ' + apiUrl);
+    
+    // Hacer request a la API
+    const response = UrlFetchApp.fetch(apiUrl);
+    const data = JSON.parse(response.getContentText());
+    
+    // Verificar que haya datos
+    if (!data.tree || data.tree.length === 0) {
+      throw new Error('No se encontraron archivos en el repositorio');
+    }
+    
+    // Filtrar solo archivos (type: "blob") y excluir carpetas especiales
+    const archivos = data.tree.filter(item => {
+      // Solo archivos (blob), no carpetas (tree)
+      if (item.type !== 'blob') return false;
+      
+      // Excluir carpetas/archivos especiales
+      if (item.path.startsWith('.git/')) return false;
+      if (item.path.includes('node_modules/')) return false;
+      if (item.path.startsWith('.')) return false; // Archivos ocultos como .gitignore
+      
+      return true;
+    });
+    
+    // Generar raw links
+    const rawLinks = archivos.map(item => {
+      return 'https://raw.githubusercontent.com/' + parts.user + '/' + parts.repo + '/refs/heads/' + parts.branch + '/' + item.path;
+    });
+    
+    Logger.log('Total de archivos encontrados: ' + rawLinks.length);
+    
+    // Retornar como objeto
+    return {
+      success: true,
+      linkList: rawLinks.join('\n'),
+      totalArchivos: rawLinks.length,
+      user: parts.user,
+      repo: parts.repo,
+      branch: parts.branch
+    };
+    
+  } catch (error) {
+    Logger.log('Error en generarLinkListDesdeTree: ' + error.message);
+    throw new Error('Error al generar LinkList: ' + error.message);
+  }
+}
+
+// FUNCIÓN AUXILIAR: Extraer información del URL de GitHub
+function extraerInfoGitHub(url) {
+  try {
+    // Limpiar URL
+    url = url.trim();
+    
+    // Patrón: https://github.com/{user}/{repo}/tree/{branch}
+    const match = url.match(/github\.com\/([^\/]+)\/([^\/]+)\/tree\/(.+)/);
+    
+    if (!match) {
+      return { user: null, repo: null, branch: null };
+    }
+    
+    return {
+      user: match[1],
+      repo: match[2],
+      branch: match[3].replace(/\/$/, '') // Remover slash final si existe
+    };
+    
+  } catch (error) {
+    Logger.log('Error al extraer info de GitHub URL: ' + error.message);
+    return { user: null, repo: null, branch: null };
+  }
 }
 
 // ============================================
-// FUNCIÓN DE TEST (TEMPORAL)
+// BATERÍA DE PRUEBAS COMPLETA
 // ============================================
 
-function testTodo() {
+function testCompleto() {
+  Logger.log('╔════════════════════════════════════════════════════════════╗');
+  Logger.log('║     CODEHUBBER v2.3 - BATERÍA DE PRUEBAS COMPLETA         ║');
+  Logger.log('╚════════════════════════════════════════════════════════════╝');
+  Logger.log('');
+  
+  let testsPasados = 0;
+  let testsFallados = 0;
+  
+  // ============================================
+  // TEST 1: OBTENER PROYECTOS
+  // ============================================
+  Logger.log('📋 TEST 1: obtenerProyectos()');
   try {
-    Logger.log('=== INICIO TEST ===');
-    
-    // 1. Probar obtener proyectos
-    var proyectos = obtenerProyectos();
-    Logger.log('✅ obtenerProyectos: ' + proyectos.length + ' proyectos encontrados');
-    
+    const proyectos = obtenerProyectos();
+    Logger.log('  ✅ PASÓ - Proyectos obtenidos: ' + proyectos.length);
     if (proyectos.length > 0) {
-      Logger.log('Proyectos:');
-      proyectos.forEach(function(p) {
-        Logger.log('  - ' + p.nombre + ' (rowIndex: ' + p.rowIndex + ')');
-      });
-      
-      // 2. Probar obtener primer proyecto
-      var primerProyecto = proyectos[0];
-      Logger.log('Probando obtener proyecto: ' + primerProyecto.nombre);
-      
-      var proyecto = obtenerProyecto(primerProyecto.rowIndex);
-      Logger.log('✅ obtenerProyecto: ' + proyecto.nombre);
-      
-      // 3. Probar actualizar campo (info)
-      Logger.log('Probando actualizar campo info...');
-      var actualizado = actualizarCampo(primerProyecto.rowIndex, 'info', 'Test desde Apps Script - ' + new Date());
-      Logger.log('✅ actualizarCampo: Campo actualizado correctamente');
-      
-    } else {
-      Logger.log('⚠️ No hay proyectos en el Sheet para probar');
+      Logger.log('  📊 Primer proyecto: ' + proyectos[0].nombre);
     }
-    
-    Logger.log('');
-    Logger.log('✅✅✅ TODAS LAS PRUEBAS PASARON ✅✅✅');
-    
+    testsPasados++;
   } catch (error) {
-    Logger.log('');
-    Logger.log('❌❌❌ ERROR EN TEST ❌❌❌');
-    Logger.log('Mensaje: ' + error.message);
-    Logger.log('Stack: ' + error.stack);
+    Logger.log('  ❌ FALLÓ - ' + error.message);
+    testsFallados++;
   }
+  Logger.log('');
+  
+  // ============================================
+  // TEST 2: OBTENER PROYECTO ESPECÍFICO
+  // ============================================
+  Logger.log('🔍 TEST 2: obtenerProyecto(rowIndex)');
+  try {
+    const proyectos = obtenerProyectos();
+    if (proyectos.length > 0) {
+      const proyecto = obtenerProyecto(proyectos[0].rowIndex);
+      Logger.log('  ✅ PASÓ - Proyecto: ' + proyecto.nombre);
+      Logger.log('  📊 RowIndex: ' + proyecto.rowIndex);
+      testsPasados++;
+    } else {
+      Logger.log('  ⚠️ SALTADO - No hay proyectos para probar');
+    }
+  } catch (error) {
+    Logger.log('  ❌ FALLÓ - ' + error.message);
+    testsFallados++;
+  }
+  Logger.log('');
+  
+  // ============================================
+  // TEST 3: CREAR PROYECTO TEMPORAL
+  // ============================================
+  Logger.log('➕ TEST 3: crearProyecto(nombre)');
+  let proyectoTestRowIndex = null;
+  try {
+    const proyectosAntes = obtenerProyectos().length;
+    const resultado = crearProyecto('TEST_TEMPORAL_' + new Date().getTime());
+    const proyectosDespues = obtenerProyectos().length;
+    
+    if (proyectosDespues === proyectosAntes + 1) {
+      Logger.log('  ✅ PASÓ - Proyecto creado correctamente');
+      proyectoTestRowIndex = resultado[resultado.length - 1].rowIndex;
+      Logger.log('  📊 RowIndex del proyecto test: ' + proyectoTestRowIndex);
+      testsPasados++;
+    } else {
+      throw new Error('El número de proyectos no aumentó');
+    }
+  } catch (error) {
+    Logger.log('  ❌ FALLÓ - ' + error.message);
+    testsFallados++;
+  }
+  Logger.log('');
+  
+  // ============================================
+  // TEST 4: ACTUALIZAR CAMPO
+  // ============================================
+  Logger.log('✏️ TEST 4: actualizarCampo(rowIndex, campo, valor)');
+  try {
+    if (proyectoTestRowIndex) {
+      const valorTest = 'Info de prueba - ' + new Date().toLocaleString();
+      const resultado = actualizarCampo(proyectoTestRowIndex, 'info', valorTest);
+      
+      if (resultado.info === valorTest) {
+        Logger.log('  ✅ PASÓ - Campo actualizado correctamente');
+        Logger.log('  📊 Valor guardado: ' + resultado.info.substring(0, 30) + '...');
+        testsPasados++;
+      } else {
+        throw new Error('El valor no se guardó correctamente');
+      }
+    } else {
+      Logger.log('  ⚠️ SALTADO - No hay proyecto de prueba');
+    }
+  } catch (error) {
+    Logger.log('  ❌ FALLÓ - ' + error.message);
+    testsFallados++;
+  }
+  Logger.log('');
+  
+  // ============================================
+  // TEST 5: REORDENAR PROYECTO
+  // ============================================
+  Logger.log('🔄 TEST 5: reordenarProyecto(rowIndex, nuevoOrden)');
+  try {
+    if (proyectoTestRowIndex) {
+      const ordenAntes = obtenerProyecto(proyectoTestRowIndex).orden;
+      reordenarProyecto(proyectoTestRowIndex, 1);
+      const ordenDespues = obtenerProyecto(proyectoTestRowIndex).orden;
+      
+      if (ordenDespues === 1) {
+        Logger.log('  ✅ PASÓ - Proyecto reordenado correctamente');
+        Logger.log('  📊 Orden antes: ' + ordenAntes + ', después: ' + ordenDespues);
+        testsPasados++;
+      } else {
+        throw new Error('El orden no cambió como se esperaba');
+      }
+    } else {
+      Logger.log('  ⚠️ SALTADO - No hay proyecto de prueba');
+    }
+  } catch (error) {
+    Logger.log('  ❌ FALLÓ - ' + error.message);
+    testsFallados++;
+  }
+  Logger.log('');
+  
+  // ============================================
+  // TEST 6: API DE GITHUB - EXTRAER INFO URL
+  // ============================================
+  Logger.log('🔗 TEST 6: extraerInfoGitHub(url)');
+  try {
+    const testUrl = 'https://github.com/koki81pe/CodeHubber/tree/main';
+    const info = extraerInfoGitHub(testUrl);
+    
+    if (info.user === 'koki81pe' && info.repo === 'CodeHubber' && info.branch === 'main') {
+      Logger.log('  ✅ PASÓ - Información extraída correctamente');
+      Logger.log('  📊 User: ' + info.user + ', Repo: ' + info.repo + ', Branch: ' + info.branch);
+      testsPasados++;
+    } else {
+      throw new Error('La información extraída no es correcta');
+    }
+  } catch (error) {
+    Logger.log('  ❌ FALLÓ - ' + error.message);
+    testsFallados++;
+  }
+  Logger.log('');
+  
+  // ============================================
+  // TEST 7: API DE GITHUB - GENERAR LINKLIST
+  // ============================================
+  Logger.log('🌐 TEST 7: generarLinkListDesdeTree(treeUrl)');
+  try {
+    const testUrl = 'https://github.com/koki81pe/CodeHubber/tree/main';
+    const resultado = generarLinkListDesdeTree(testUrl);
+    
+    if (resultado.success && resultado.totalArchivos > 0) {
+      Logger.log('  ✅ PASÓ - LinkList generado correctamente');
+      Logger.log('  📊 Total archivos: ' + resultado.totalArchivos);
+      Logger.log('  📊 Primeros 200 chars del LinkList:');
+      Logger.log('  ' + resultado.linkList.substring(0, 200) + '...');
+      testsPasados++;
+    } else {
+      throw new Error('No se generó el LinkList correctamente');
+    }
+  } catch (error) {
+    Logger.log('  ❌ FALLÓ - ' + error.message);
+    testsFallados++;
+  }
+  Logger.log('');
+  
+  // ============================================
+  // TEST 8: ELIMINAR PROYECTO TEMPORAL
+  // ============================================
+  Logger.log('🗑️ TEST 8: eliminarProyecto(rowIndex)');
+  try {
+    if (proyectoTestRowIndex) {
+      const proyectosAntes = obtenerProyectos().length;
+      eliminarProyecto(proyectoTestRowIndex);
+      const proyectosDespues = obtenerProyectos().length;
+      
+      if (proyectosDespues === proyectosAntes - 1) {
+        Logger.log('  ✅ PASÓ - Proyecto eliminado correctamente');
+        Logger.log('  📊 Proyectos antes: ' + proyectosAntes + ', después: ' + proyectosDespues);
+        testsPasados++;
+      } else {
+        throw new Error('El proyecto no se eliminó correctamente');
+      }
+    } else {
+      Logger.log('  ⚠️ SALTADO - No hay proyecto de prueba para eliminar');
+    }
+  } catch (error) {
+    Logger.log('  ❌ FALLÓ - ' + error.message);
+    testsFallados++;
+  }
+  Logger.log('');
+  
+  // ============================================
+  // RESUMEN
+  // ============================================
+  Logger.log('');
+  Logger.log('╔════════════════════════════════════════════════════════════╗');
+  Logger.log('║                    RESUMEN DE PRUEBAS                      ║');
+  Logger.log('╚════════════════════════════════════════════════════════════╝');
+  Logger.log('');
+  Logger.log('✅ Tests pasados: ' + testsPasados);
+  Logger.log('❌ Tests fallados: ' + testsFallados);
+  Logger.log('📊 Total de tests: ' + (testsPasados + testsFallados));
+  Logger.log('');
+  
+  if (testsFallados === 0) {
+    Logger.log('🎉🎉🎉 ¡TODOS LOS TESTS PASARON! 🎉🎉🎉');
+  } else {
+    Logger.log('⚠️ Algunos tests fallaron. Revisa los errores arriba.');
+  }
+  
+  Logger.log('');
+  Logger.log('════════════════════════════════════════════════════════════');
 }
