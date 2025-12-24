@@ -2,15 +2,15 @@
 <html lang="es">
 <!-- 
   ============================================
-  CODEHUBBER - HOME.HTML v2.4
-  Última actualización: 14/12/2024 - 23:30
-  Mejora: Botón Guardar Links ahora guarda Raw LinkList URL + SolidLink
+  CODEHUBBER - HOME.HTML v2.5
+  Última actualización: 24/12/2024
+  Mejora: Sistema de alertas persistentes + Loading mejorado
   ============================================
 -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CodeHubber v2.4</title>
+  <title>CodeHubber v2.5</title>
   
   <style>
     * {
@@ -388,6 +388,300 @@
       font-size: 13px;
       color: #58a6ff;
     }
+
+    /* ====================================
+       SISTEMA DE ALERTAS PERSISTENTES v2.5
+       ==================================== */
+
+    .alert-persistent {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #161b22;
+      border: 2px solid #da3633;
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+
+    .alert-persistent.active {
+      display: block;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translate(-50%, -60%);
+        opacity: 0;
+      }
+      to {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+      }
+    }
+
+    .alert-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(1, 4, 9, 0.9);
+      z-index: 1999;
+      display: none;
+      backdrop-filter: blur(4px);
+    }
+
+    .alert-overlay.active {
+      display: block;
+    }
+
+    .alert-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .alert-icon {
+      font-size: 32px;
+      flex-shrink: 0;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .alert-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #f85149;
+      flex: 1;
+    }
+
+    .alert-title.warning {
+      color: #ff9800;
+    }
+
+    .alert-title.success {
+      color: #4CAF50;
+    }
+
+    .alert-close-btn {
+      background: none;
+      border: none;
+      color: #8b949e;
+      cursor: pointer;
+      font-size: 24px;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .alert-close-btn:hover {
+      background: #30363d;
+      color: #c9d1d9;
+    }
+
+    .alert-body {
+      margin-bottom: 20px;
+    }
+
+    .alert-message {
+      color: #c9d1d9;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .alert-stats {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .stat-value.success { color: #4CAF50; }
+    .stat-value.error { color: #f85149; }
+    .stat-value.total { color: #58a6ff; }
+
+    .stat-label {
+      display: block;
+      font-size: 12px;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .alert-details {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .alert-details-header {
+      color: #f85149;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .alert-detail-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 0;
+      color: #8b949e;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .alert-detail-item:last-child {
+      border-bottom: none;
+    }
+
+    .alert-detail-icon {
+      color: #f85149;
+      font-weight: bold;
+      flex-shrink: 0;
+      width: 20px;
+      text-align: center;
+    }
+
+    .alert-detail-text {
+      flex: 1;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    .alert-footer {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .alert-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .alert-btn-primary {
+      background: #238636;
+      color: #fff;
+    }
+
+    .alert-btn-primary:hover {
+      background: #2ea043;
+    }
+
+    .alert-btn-secondary {
+      background: #21262d;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
+    }
+
+    .alert-btn-secondary:hover {
+      background: #30363d;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(1, 4, 9, 0.95);
+      z-index: 1998;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(3px);
+    }
+
+    .loading-overlay.active {
+      display: flex;
+    }
+
+    .loading-content {
+      text-align: center;
+    }
+
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 5px solid #30363d;
+      border-top: 5px solid #58a6ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: #c9d1d9;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .loading-subtext {
+      color: #8b949e;
+      font-size: 14px;
+    }
+
+    .loading-progress {
+      margin-top: 16px;
+      color: #58a6ff;
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+    }
   </style>
 </head>
 <body>
@@ -455,7 +749,7 @@
             </div>
           </div>
 
-          <!-- TAB: LINKLIST (NUEVO) -->
+          <!-- TAB: LINKLIST -->
           <div id="tab-linklist" class="tab-content">
             <div class="info-box">
               ℹ️ Esta es una herramienta utilitaria. Genera el LinkList desde un repositorio de GitHub y cópialo para usarlo después.
@@ -555,8 +849,61 @@
     </div>
   </div>
 
+  <!-- OVERLAY DE LOADING -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-text" id="loadingText">Generando SolidCode...</div>
+      <div class="loading-subtext" id="loadingSubtext">Por favor espera</div>
+      <div class="loading-progress" id="loadingProgress"></div>
+    </div>
+  </div>
+
+  <!-- OVERLAY Y ALERTA PERSISTENTE -->
+  <div id="alertOverlay" class="alert-overlay" onclick="cerrarAlertaPersistente()"></div>
+  <div id="alertPersistent" class="alert-persistent">
+    <div class="alert-header">
+      <div class="alert-icon" id="alertIcon">⚠️</div>
+      <div class="alert-title" id="alertTitle">Error al generar SolidCode</div>
+      <button class="alert-close-btn" onclick="cerrarAlertaPersistente()">×</button>
+    </div>
+    <div class="alert-body">
+      <div class="alert-message" id="alertMessage">
+        Se detectaron problemas al obtener algunos archivos del repositorio.
+      </div>
+      
+      <!-- Estadísticas -->
+      <div class="alert-stats" id="alertStats" style="display: none;">
+        <div class="stat-item">
+          <span class="stat-value total" id="statTotal">0</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value success" id="statSuccess">0</span>
+          <span class="stat-label">Exitosos</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value error" id="statError">0</span>
+          <span class="stat-label">Errores</span>
+        </div>
+      </div>
+      
+      <!-- Detalles de errores -->
+      <div class="alert-details" id="alertDetails" style="display: none;">
+        <div class="alert-details-header">Detalles de los errores:</div>
+        <div id="alertDetailsList">
+          <!-- Los detalles se llenan dinámicamente -->
+        </div>
+      </div>
+    </div>
+    <div class="alert-footer">
+      <button class="alert-btn alert-btn-secondary" onclick="cerrarAlertaPersistente()">Cerrar</button>
+      <button class="alert-btn alert-btn-primary" onclick="reintentar()">Reintentar</button>
+    </div>
+  </div>
+
   <script>
-    console.log('=== CODEHUBBER v2.4 INICIANDO ===');
+    console.log('=== CODEHUBBER v2.5 INICIANDO ===');
     let proyectos = [];
     let proyectoActual = null;
 
@@ -574,10 +921,14 @@
     };
 
     function inicializarEventos() {
-      document.getElementById('btnCancelarNuevo').addEventListener('click', () => cerrarModal('modalNuevoProyecto'));
+      document.getElementById('btnCancelarNuevo').addEventListener('click', function() {
+        cerrarModal('modalNuevoProyecto');
+      });
       document.getElementById('btnConfirmarNuevo').addEventListener('click', confirmarNuevoProyecto);
       
-      document.getElementById('btnCancelarEliminar').addEventListener('click', () => cerrarModal('modalEliminar'));
+      document.getElementById('btnCancelarEliminar').addEventListener('click', function() {
+        cerrarModal('modalEliminar');
+      });
       document.getElementById('btnConfirmarEliminar').addEventListener('click', confirmarEliminar);
       
       document.getElementById('inputNombreProyecto').addEventListener('keypress', function(e) {
@@ -587,12 +938,10 @@
 
     function cargarProyectos() {
       console.log('>>> cargarProyectos() ejecutándose...');
-      console.log('google.script disponible:', typeof google !== 'undefined' && typeof google.script !== 'undefined');
       
       google.script.run
         .withSuccessHandler(function(data) {
           console.log('✅ obtenerProyectos SUCCESS - Proyectos recibidos:', data.length);
-          console.log('Datos:', data);
           proyectos = data;
           renderizarProyectos();
           
@@ -615,7 +964,7 @@
       const list = document.getElementById('projectList');
       list.innerHTML = '';
 
-      proyectos.forEach(proyecto => {
+      proyectos.forEach(function(proyecto) {
         const item = document.createElement('div');
         item.className = 'project-item';
         if (proyectoActual && proyectoActual.rowIndex === proyecto.rowIndex) {
@@ -626,8 +975,12 @@
         orderInput.type = 'number';
         orderInput.className = 'project-order';
         orderInput.value = proyecto.orden;
-        orderInput.addEventListener('click', (e) => e.stopPropagation());
-        orderInput.addEventListener('change', (e) => reordenar(proyecto.rowIndex, parseFloat(e.target.value)));
+        orderInput.addEventListener('click', function(e) {
+          e.stopPropagation();
+        });
+        orderInput.addEventListener('change', function(e) {
+          reordenar(proyecto.rowIndex, parseFloat(e.target.value));
+        });
 
         const nameContainer = document.createElement('div');
         nameContainer.className = 'project-name';
@@ -635,7 +988,9 @@
 
         item.appendChild(orderInput);
         item.appendChild(nameContainer);
-        item.addEventListener('click', () => seleccionarProyecto(proyecto.rowIndex));
+        item.addEventListener('click', function() {
+          seleccionarProyecto(proyecto.rowIndex);
+        });
 
         list.appendChild(item);
       });
@@ -675,22 +1030,27 @@
     }
 
     function cambiarTab(tabName) {
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(tab => {
+      document.querySelectorAll('.tab').forEach(function(tab) {
+        tab.classList.remove('active');
+      });
+      
+      document.querySelectorAll('.tab').forEach(function(tab) {
         if (tab.getAttribute('data-tab') === tabName) {
           tab.classList.add('active');
         }
       });
 
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(function(content) {
+        content.classList.remove('active');
+      });
+      
       document.getElementById('tab-' + tabName).classList.add('active');
     }
 
     function abrirModalNuevoProyecto() {
-      console.log('>>> abrirModalNuevoProyecto() ejecutándose...');
       document.getElementById('modalNuevoProyecto').classList.add('active');
       document.getElementById('inputNombreProyecto').value = '';
-      setTimeout(() => {
+      setTimeout(function() {
         document.getElementById('inputNombreProyecto').focus();
       }, 100);
     }
@@ -756,6 +1116,87 @@
         .withFailureHandler(mostrarError)
         .reordenarProyecto(rowIndex, nuevoOrden);
     }
+
+    // ====================================
+    // SISTEMA DE ALERTAS PERSISTENTES v2.5
+    // ====================================
+
+    function mostrarAlertaPersistente(tipo, titulo, mensaje, detalles, estadisticas) {
+      detalles = detalles || null;
+      estadisticas = estadisticas || null;
+      
+      // Configurar ícono según tipo
+      const iconos = {
+        error: '❌',
+        warning: '⚠️',
+        success: '✅',
+        info: 'ℹ️'
+      };
+      
+      document.getElementById('alertIcon').textContent = iconos[tipo] || iconos.warning;
+      document.getElementById('alertTitle').textContent = titulo;
+      document.getElementById('alertTitle').className = 'alert-title ' + tipo;
+      document.getElementById('alertMessage').textContent = mensaje;
+      
+      // Mostrar estadísticas si existen
+      const alertStats = document.getElementById('alertStats');
+      if (estadisticas && estadisticas.total > 0) {
+        alertStats.style.display = 'grid';
+        document.getElementById('statTotal').textContent = estadisticas.total;
+        document.getElementById('statSuccess').textContent = estadisticas.exitosos;
+        document.getElementById('statError').textContent = estadisticas.fallidos;
+      } else {
+        alertStats.style.display = 'none';
+      }
+      
+      // Mostrar detalles de errores si existen
+      const alertDetails = document.getElementById('alertDetails');
+      const alertDetailsList = document.getElementById('alertDetailsList');
+      
+      if (detalles && detalles.length > 0) {
+        alertDetails.style.display = 'block';
+        alertDetailsList.innerHTML = detalles.map(function(detalle, index) {
+          return '<div class="alert-detail-item">' +
+            '<span class="alert-detail-icon">' + (index + 1) + '</span>' +
+            '<span class="alert-detail-text">' + detalle + '</span>' +
+            '</div>';
+        }).join('');
+      } else {
+        alertDetails.style.display = 'none';
+      }
+      
+      document.getElementById('alertOverlay').classList.add('active');
+      document.getElementById('alertPersistent').classList.add('active');
+    }
+
+    function cerrarAlertaPersistente() {
+      document.getElementById('alertOverlay').classList.remove('active');
+      document.getElementById('alertPersistent').classList.remove('active');
+    }
+
+    function mostrarLoading(texto, subtexto, progreso) {
+      texto = texto || 'Procesando...';
+      subtexto = subtexto || 'Por favor espera';
+      progreso = progreso || '';
+      
+      document.getElementById('loadingText').textContent = texto;
+      document.getElementById('loadingSubtext').textContent = subtexto;
+      document.getElementById('loadingProgress').textContent = progreso;
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    function ocultarLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    function reintentar() {
+      cerrarAlertaPersistente();
+      generarSolidCode();
+    }
+
+    // ====================================
+    // FUNCIONES PRINCIPALES
+    // ====================================
 
     // GUARDAR PESTAÑA SOLIDCODE
     function guardarCampoSolidCode() {
@@ -835,6 +1276,7 @@
         .actualizarCampo(proyectoActual.rowIndex, 'info', info);
     }
 
+    // GENERAR SOLIDCODE - VERSIÓN MEJORADA
     function generarSolidCode() {
       if (!proyectoActual) return;
 
@@ -845,15 +1287,56 @@
         return;
       }
 
-      mostrarMensaje('Generando SolidCode desde Raw LinkList...', 'success');
+      // Mostrar loading
+      mostrarLoading(
+        'Generando SolidCode...', 
+        'Obteniendo archivos del repositorio',
+        'Esto puede tomar varios segundos...'
+      );
 
       google.script.run
         .withSuccessHandler(function(result) {
-          document.getElementById('solidCode').value = result.solidCode;
-          proyectoActual.solidCode = result.docId;
-          mostrarMensaje(result.message + ' - Guardado en Google Doc', 'success');
+          ocultarLoading();
+          
+          if (result.success) {
+            // Actualizar el textarea con el SolidCode generado
+            document.getElementById('solidCode').value = result.solidCode;
+            proyectoActual.solidCode = result.docId;
+            
+            // Verificar si hay errores
+            if (result.errores && result.errores.length > 0) {
+              // Mostrar alerta con advertencias
+              mostrarAlertaPersistente(
+                'warning',
+                '⚠️ SolidCode generado con advertencias',
+                result.message,
+                result.errores,
+                result.estadisticas
+              );
+            } else {
+              // Todo exitoso
+              mostrarMensaje('✅ ' + result.message, 'success');
+            }
+          } else {
+            // Error crítico
+            mostrarAlertaPersistente(
+              'error',
+              '❌ Error al generar SolidCode',
+              result.message,
+              result.errores || [],
+              result.estadisticas
+            );
+          }
         })
-        .withFailureHandler(mostrarError)
+        .withFailureHandler(function(error) {
+          ocultarLoading();
+          mostrarAlertaPersistente(
+            'error',
+            '❌ Error crítico de conexión',
+            'No se pudo conectar con el servidor o hubo un error inesperado.',
+            [error.message || error.toString()]
+          );
+        })
         .generarSolidCodeDesdeRaw(proyectoActual.rowIndex, rawLinkListUrl);
     }
 
@@ -932,7 +1415,7 @@
       
       const duracion = tipo === 'error' ? 8000 : 4000;
       
-      setTimeout(() => {
+      setTimeout(function() {
         mensaje.style.display = 'none';
       }, duracion);
     }
