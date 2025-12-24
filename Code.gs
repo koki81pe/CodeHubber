@@ -1,7 +1,7 @@
 // ============================================
-// CODEHUBBER v2.3 - CODE.GS
-// Última actualización: 14/12/2024 - 22:00
-// Nuevo: Generador de LinkList desde GitHub Tree API
+// CODEHUBBER v2.5 - CODE.GS
+// Última actualización: 24/12/2024
+// Mejoras: Sistema de reintentos + Notificación de errores detallada
 // ============================================
 
 const SPREADSHEET_ID = '1PqTYY7dOVicyhTt84y3FTMV7giJjvTy7aNqzGItZK54';
@@ -35,6 +35,73 @@ function getSheet() {
 }
 
 // ============================================
+// FUNCIÓN AUXILIAR: FETCH CON REINTENTOS
+// ============================================
+
+function fetchConReintentos(url, intentosMaximos) {
+  intentosMaximos = intentosMaximos || 3;
+  let ultimoError = null;
+  
+  for (let intento = 1; intento <= intentosMaximos; intento++) {
+    try {
+      Logger.log(`Intento ${intento}/${intentosMaximos} para: ${url}`);
+      
+      const opciones = {
+        method: 'get',
+        muteHttpExceptions: true,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (CodeHubber/2.5)',
+          'Accept': '*/*',
+          'Cache-Control': 'no-cache'
+        },
+        validateHttpsCertificates: true,
+        followRedirects: true
+      };
+      
+      const response = UrlFetchApp.fetch(url, opciones);
+      const responseCode = response.getResponseCode();
+      
+      // Si es exitoso, retornar
+      if (responseCode === 200) {
+        Logger.log(`  ✅ Exitoso en intento ${intento}`);
+        return response;
+      }
+      
+      // Si es 404 o similar, no reintentar (es un error permanente)
+      if (responseCode >= 400 && responseCode < 500 && responseCode !== 429) {
+        throw new Error(`HTTP ${responseCode} - Archivo no encontrado o sin acceso`);
+      }
+      
+      // Si es error de servidor (500+) o rate limit (429), reintentar
+      if (responseCode >= 500 || responseCode === 429) {
+        ultimoError = new Error(`HTTP ${responseCode} - Error del servidor`);
+        Logger.log(`  ⚠️ Error ${responseCode}, reintentando...`);
+        Utilities.sleep(1000 * intento); // Espera incremental
+        continue;
+      }
+      
+      // Otro código de respuesta
+      throw new Error(`HTTP ${responseCode} - Respuesta inesperada`);
+      
+    } catch (error) {
+      ultimoError = error;
+      Logger.log(`  ❌ Error en intento ${intento}: ${error.message}`);
+      
+      // Si es el último intento, lanzar el error
+      if (intento === intentosMaximos) {
+        throw error;
+      }
+      
+      // Esperar antes de reintentar
+      Utilities.sleep(1000 * intento);
+    }
+  }
+  
+  // Si llegamos aquí, todos los intentos fallaron
+  throw ultimoError || new Error('Todos los intentos fallaron sin error específico');
+}
+
+// ============================================
 // CRUD PROYECTOS
 // ============================================
 
@@ -53,18 +120,24 @@ function obtenerProyectos() {
     
     // Filtrar filas vacías y mapear a objetos
     const proyectos = data
-      .map((row, index) => ({
-        rowIndex: index + 2,
-        orden: row[0] || 0,
-        nombre: row[1] || '',
-        linkList: row[2] || '',
-        solidCode: row[3] || '',
-        solidLink: row[4] || '',
-        appWebLink: row[5] || '',
-        info: row[6] || ''
-      }))
-      .filter(p => p.nombre && p.nombre.toString().trim() !== '')
-      .sort((a, b) => a.orden - b.orden);
+      .map(function(row, index) {
+        return {
+          rowIndex: index + 2,
+          orden: row[0] || 0,
+          nombre: row[1] || '',
+          linkList: row[2] || '',
+          solidCode: row[3] || '',
+          solidLink: row[4] || '',
+          appWebLink: row[5] || '',
+          info: row[6] || ''
+        };
+      })
+      .filter(function(p) {
+        return p.nombre && p.nombre.toString().trim() !== '';
+      })
+      .sort(function(a, b) {
+        return a.orden - b.orden;
+      });
     
     return proyectos;
   } catch (error) {
@@ -93,7 +166,7 @@ function obtenerProyecto(rowIndex) {
     
     // Validar rango
     if (rowIndex < 2 || rowIndex > lastRow) {
-      throw new Error(`rowIndex fuera de rango: ${rowIndex} (válido: 2-${lastRow})`);
+      throw new Error('rowIndex fuera de rango: ' + rowIndex + ' (válido: 2-' + lastRow + ')');
     }
     
     const row = sheet.getRange(rowIndex, 1, 1, 7).getValues()[0];
@@ -127,7 +200,7 @@ function crearProyecto(nombre) {
     
     // Calcular siguiente orden
     const maxOrden = proyectos.length > 0 
-      ? Math.max(...proyectos.map(p => p.orden)) 
+      ? Math.max.apply(Math, proyectos.map(function(p) { return p.orden; })) 
       : 0;
     const nuevoOrden = maxOrden + 1;
     
@@ -188,7 +261,7 @@ function actualizarCampo(rowIndex, campo, valor) {
     
     // Validar rango
     if (rowIndex < 2 || rowIndex > lastRow) {
-      throw new Error(`rowIndex fuera de rango: ${rowIndex} (válido: 2-${lastRow})`);
+      throw new Error('rowIndex fuera de rango: ' + rowIndex + ' (válido: 2-' + lastRow + ')');
     }
     
     sheet.getRange(rowIndex, columnas[campo]).setValue(valor || '');
@@ -221,7 +294,7 @@ function eliminarProyecto(rowIndex) {
     
     // Validar rango
     if (rowIndex < 2 || rowIndex > lastRow) {
-      throw new Error(`rowIndex fuera de rango: ${rowIndex} (válido: 2-${lastRow})`);
+      throw new Error('rowIndex fuera de rango: ' + rowIndex + ' (válido: 2-' + lastRow + ')');
     }
     
     const proyecto = obtenerProyecto(rowIndex);
@@ -276,11 +349,14 @@ function reordenarProyecto(rowIndex, nuevoOrden) {
     
     // Validar rango
     if (rowIndex < 2 || rowIndex > lastRow) {
-      throw new Error(`rowIndex fuera de rango: ${rowIndex} (válido: 2-${lastRow})`);
+      throw new Error('rowIndex fuera de rango: ' + rowIndex + ' (válido: 2-' + lastRow + ')');
     }
     
     // Encontrar el proyecto que se está moviendo
-    const proyectoMovido = proyectos.find(p => p.rowIndex === rowIndex);
+    const proyectoMovido = proyectos.filter(function(p) {
+      return p.rowIndex === rowIndex;
+    })[0];
+    
     if (!proyectoMovido) {
       throw new Error('Proyecto no encontrado');
     }
@@ -293,7 +369,7 @@ function reordenarProyecto(rowIndex, nuevoOrden) {
     }
     
     // Manejar casos especiales
-    const maxOrden = Math.max(...proyectos.map(p => p.orden));
+    const maxOrden = Math.max.apply(Math, proyectos.map(function(p) { return p.orden; }));
     
     if (nuevoOrden > maxOrden) {
       nuevoOrden = maxOrden;
@@ -302,17 +378,19 @@ function reordenarProyecto(rowIndex, nuevoOrden) {
     }
     
     // Remover proyecto de su posición actual
-    proyectos = proyectos.filter(p => p.rowIndex !== rowIndex);
+    proyectos = proyectos.filter(function(p) {
+      return p.rowIndex !== rowIndex;
+    });
     
     // Ajustar órdenes antes de insertar
     if (nuevoOrden < ordenActual) {
-      proyectos.forEach(p => {
+      proyectos.forEach(function(p) {
         if (p.orden >= nuevoOrden && p.orden < ordenActual) {
           p.orden++;
         }
       });
     } else if (nuevoOrden > ordenActual) {
-      proyectos.forEach(p => {
+      proyectos.forEach(function(p) {
         if (p.orden > ordenActual && p.orden <= nuevoOrden) {
           p.orden--;
         }
@@ -324,13 +402,16 @@ function reordenarProyecto(rowIndex, nuevoOrden) {
     proyectos.push(proyectoMovido);
     
     // Ordenar y renumerar secuencialmente
-    proyectos.sort((a, b) => a.orden - b.orden);
-    proyectos.forEach((p, index) => {
+    proyectos.sort(function(a, b) {
+      return a.orden - b.orden;
+    });
+    
+    proyectos.forEach(function(p, index) {
       p.orden = index + 1;
     });
     
     // Guardar todos los cambios
-    proyectos.forEach(p => {
+    proyectos.forEach(function(p) {
       sheet.getRange(p.rowIndex, 1).setValue(p.orden);
     });
     
@@ -347,7 +428,7 @@ function renumerarProyectos() {
     const sheet = getSheet();
     const proyectos = obtenerProyectos();
     
-    proyectos.forEach((p, index) => {
+    proyectos.forEach(function(p, index) {
       const nuevoOrden = index + 1;
       sheet.getRange(p.rowIndex, 1).setValue(nuevoOrden);
     });
@@ -377,7 +458,7 @@ function guardarSolidCodeEnDoc(docId, nombre, contenido) {
     }
     
     if (!doc) {
-      doc = DocumentApp.create(`SC_${nombre}`);
+      doc = DocumentApp.create('SC_' + nombre);
       
       const file = DriveApp.getFileById(doc.getId());
       const folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
@@ -417,7 +498,7 @@ function obtenerSolidCodeDeDoc(docId) {
 }
 
 // ============================================
-// GENERADOR DE SOLID CODE
+// GENERADOR DE SOLID CODE - VERSIÓN MEJORADA v2.5
 // ============================================
 
 function generarSolidCodeDesdeRaw(rowIndex, rawLinkListUrl) {
@@ -444,18 +525,18 @@ function generarSolidCodeDesdeRaw(rowIndex, rawLinkListUrl) {
     
     // Validar rango
     if (rowIndex < 2 || rowIndex > lastRow) {
-      throw new Error(`rowIndex fuera de rango: ${rowIndex} (válido: 2-${lastRow})`);
+      throw new Error('rowIndex fuera de rango: ' + rowIndex + ' (válido: 2-' + lastRow + ')');
     }
     
     const proyecto = obtenerProyecto(rowIndex);
     
-    // Fetch del contenido del LinkList
+    // Fetch del contenido del LinkList con reintentos
     let linkListContent;
     try {
-      const response = UrlFetchApp.fetch(rawLinkListUrl.trim());
+      const response = fetchConReintentos(rawLinkListUrl.trim(), 3);
       linkListContent = response.getContentText();
     } catch (error) {
-      throw new Error('No se pudo obtener el LinkList. Verifica que sea una URL raw válida de GitHub.');
+      throw new Error('No se pudo obtener el LinkList. Verifica que sea una URL raw válida de GitHub. Error: ' + error.message);
     }
     
     // Guardar el LinkList en el Sheet
@@ -463,47 +544,73 @@ function generarSolidCodeDesdeRaw(rowIndex, rawLinkListUrl) {
     
     // Parsear links
     const links = linkListContent.split('\n')
-      .map(link => link.trim())
-      .filter(link => link !== '' && link.startsWith('http'));
+      .map(function(link) { return link.trim(); })
+      .filter(function(link) { return link !== '' && link.startsWith('http'); });
     
     if (links.length === 0) {
       throw new Error('No se encontraron links válidos en el LinkList.');
     }
     
-    // Generar código consolidado
-    let solidCode = `// ============================================\n`;
-    solidCode += `// SOLID CODE - ${proyecto.nombre.toUpperCase()}\n`;
-    solidCode += `// Generado: ${new Date().toLocaleString('es-PE', {timeZone: 'America/Lima'})}\n`;
-    solidCode += `// Total de archivos: ${links.length}\n`;
-    solidCode += `// ============================================\n\n`;
+    // Array para almacenar errores
+    const errores = [];
+    let archivosExitosos = 0;
     
-    // Fetch cada archivo
+    // Generar código consolidado
+    let solidCode = '// ============================================\n';
+    solidCode += '// SOLID CODE - ' + proyecto.nombre.toUpperCase() + '\n';
+    solidCode += '// Generado: ' + new Date().toLocaleString('es-PE', {timeZone: 'America/Lima'}) + '\n';
+    solidCode += '// Total de archivos: ' + links.length + '\n';
+    solidCode += '// ============================================\n\n';
+    
+    // Fetch cada archivo con manejo de errores individual
     for (let i = 0; i < links.length; i++) {
       const url = links[i];
+      const fileName = url.split('/').pop();
+      
+      solidCode += '\n\n// ============================================\n';
+      solidCode += '// ARCHIVO ' + (i + 1) + '/' + links.length + ': ' + fileName + '\n';
+      solidCode += '// URL: ' + url + '\n';
+      solidCode += '// ============================================\n\n';
       
       try {
-        const fileName = url.split('/').pop();
+        // Intentar obtener el archivo con reintentos
+        const response = fetchConReintentos(url, 3);
+        const responseCode = response.getResponseCode();
         
-        solidCode += `\n\n// ============================================\n`;
-        solidCode += `// ARCHIVO ${i + 1}/${links.length}: ${fileName}\n`;
-        solidCode += `// URL: ${url}\n`;
-        solidCode += `// ============================================\n\n`;
-        
-        const response = UrlFetchApp.fetch(url);
-        const content = response.getContentText();
-        
-        solidCode += content;
+        if (responseCode === 200) {
+          const content = response.getContentText();
+          solidCode += content;
+          archivosExitosos++;
+          Logger.log('✅ Archivo ' + (i + 1) + '/' + links.length + ': ' + fileName + ' - OK');
+        } else {
+          // Error HTTP
+          const mensajeError = 'HTTP ' + responseCode + ': ' + fileName;
+          errores.push(mensajeError);
+          solidCode += '// ERROR: No se pudo obtener el archivo\n';
+          solidCode += '// Código HTTP: ' + responseCode + '\n';
+          solidCode += '// URL: ' + url + '\n\n';
+          Logger.log('❌ Archivo ' + (i + 1) + '/' + links.length + ': ' + mensajeError);
+        }
         
       } catch (error) {
-        solidCode += `\n// ERROR: No se pudo obtener el archivo\n`;
-        solidCode += `// ${error.message}\n`;
+        // Error de conexión o timeout
+        const mensajeError = fileName + ': ' + error.message;
+        errores.push(mensajeError);
+        solidCode += '// ERROR: No se pudo obtener el archivo\n';
+        solidCode += '// ' + error.message + '\n';
+        solidCode += '// URL: ' + url + '\n\n';
+        Logger.log('❌ Archivo ' + (i + 1) + '/' + links.length + ': ' + mensajeError);
       }
     }
     
-    solidCode += `\n\n// ============================================\n`;
-    solidCode += `// FIN DEL SOLID CODE\n`;
-    solidCode += `// Tamaño total: ${solidCode.length.toLocaleString()} caracteres\n`;
-    solidCode += `// ============================================\n`;
+    solidCode += '\n\n// ============================================\n';
+    solidCode += '// FIN DEL SOLID CODE\n';
+    solidCode += '// Tamaño total: ' + solidCode.length.toLocaleString() + ' caracteres\n';
+    solidCode += '// Archivos exitosos: ' + archivosExitosos + '/' + links.length + '\n';
+    if (errores.length > 0) {
+      solidCode += '// Archivos con errores: ' + errores.length + '\n';
+    }
+    solidCode += '// ============================================\n';
     
     // Guardar en Google Doc
     const docInfo = guardarSolidCodeEnDoc(proyecto.solidCode, proyecto.nombre, solidCode);
@@ -511,16 +618,38 @@ function generarSolidCodeDesdeRaw(rowIndex, rawLinkListUrl) {
     // Actualizar Sheet con el Doc ID
     sheet.getRange(rowIndex, 4).setValue(docInfo.docId);
     
+    // Preparar mensaje de resultado
+    const mensaje = errores.length === 0
+      ? '✅ SolidCode generado exitosamente con ' + links.length + ' archivo(s)'
+      : '⚠️ SolidCode generado con ' + archivosExitosos + '/' + links.length + ' archivo(s). ' + errores.length + ' error(es) detectado(s)';
+    
+    // Retornar resultado con información completa
     return {
       success: true,
-      message: `SolidCode generado con ${links.length} archivo(s) (${solidCode.length.toLocaleString()} caracteres)`,
+      message: mensaje,
       solidCode: solidCode,
       docId: docInfo.docId,
-      docUrl: docInfo.docUrl
+      docUrl: docInfo.docUrl,
+      errores: errores,
+      estadisticas: {
+        total: links.length,
+        exitosos: archivosExitosos,
+        fallidos: errores.length
+      }
     };
     
   } catch (error) {
-    throw new Error(error.message || 'Error al generar SolidCode');
+    Logger.log('❌ ERROR CRÍTICO: ' + error.message);
+    return {
+      success: false,
+      message: 'Error al generar SolidCode: ' + error.message,
+      errores: [error.message],
+      estadisticas: {
+        total: 0,
+        exitosos: 0,
+        fallidos: 1
+      }
+    };
   }
 }
 
@@ -544,7 +673,7 @@ function cargarSolidCodeDeDoc(rowIndex) {
     
     // Validar rango
     if (rowIndex < 2 || rowIndex > lastRow) {
-      throw new Error(`rowIndex fuera de rango: ${rowIndex} (válido: 2-${lastRow})`);
+      throw new Error('rowIndex fuera de rango: ' + rowIndex + ' (válido: 2-' + lastRow + ')');
     }
     
     const proyecto = obtenerProyecto(rowIndex);
@@ -561,7 +690,7 @@ function cargarSolidCodeDeDoc(rowIndex) {
     return {
       success: true,
       solidCode: contenido,
-      message: `SolidCode cargado (${contenido.length.toLocaleString()} caracteres)`
+      message: 'SolidCode cargado (' + contenido.length.toLocaleString() + ' caracteres)'
     };
     
   } catch (error) {
@@ -570,7 +699,7 @@ function cargarSolidCodeDeDoc(rowIndex) {
 }
 
 // ============================================
-// GENERADOR DE LINKLIST DESDE GITHUB TREE (NUEVO)
+// GENERADOR DE LINKLIST DESDE GITHUB TREE
 // ============================================
 
 function generarLinkListDesdeTree(treeUrl) {
@@ -592,8 +721,8 @@ function generarLinkListDesdeTree(treeUrl) {
     
     Logger.log('Consultando API de GitHub: ' + apiUrl);
     
-    // Hacer request a la API
-    const response = UrlFetchApp.fetch(apiUrl);
+    // Hacer request a la API con reintentos
+    const response = fetchConReintentos(apiUrl, 3);
     const data = JSON.parse(response.getContentText());
     
     // Verificar que haya datos
@@ -602,7 +731,7 @@ function generarLinkListDesdeTree(treeUrl) {
     }
     
     // Filtrar solo archivos (type: "blob") y excluir carpetas especiales
-    const archivos = data.tree.filter(item => {
+    const archivos = data.tree.filter(function(item) {
       // Solo archivos (blob), no carpetas (tree)
       if (item.type !== 'blob') return false;
       
@@ -615,7 +744,7 @@ function generarLinkListDesdeTree(treeUrl) {
     });
     
     // Generar raw links
-    const rawLinks = archivos.map(item => {
+    const rawLinks = archivos.map(function(item) {
       return 'https://raw.githubusercontent.com/' + parts.user + '/' + parts.repo + '/refs/heads/' + parts.branch + '/' + item.path;
     });
     
@@ -660,222 +789,4 @@ function extraerInfoGitHub(url) {
     Logger.log('Error al extraer info de GitHub URL: ' + error.message);
     return { user: null, repo: null, branch: null };
   }
-}
-
-// ============================================
-// BATERÍA DE PRUEBAS COMPLETA
-// ============================================
-
-function testCompleto() {
-  Logger.log('╔════════════════════════════════════════════════════════════╗');
-  Logger.log('║     CODEHUBBER v2.3 - BATERÍA DE PRUEBAS COMPLETA         ║');
-  Logger.log('╚════════════════════════════════════════════════════════════╝');
-  Logger.log('');
-  
-  let testsPasados = 0;
-  let testsFallados = 0;
-  
-  // ============================================
-  // TEST 1: OBTENER PROYECTOS
-  // ============================================
-  Logger.log('📋 TEST 1: obtenerProyectos()');
-  try {
-    const proyectos = obtenerProyectos();
-    Logger.log('  ✅ PASÓ - Proyectos obtenidos: ' + proyectos.length);
-    if (proyectos.length > 0) {
-      Logger.log('  📊 Primer proyecto: ' + proyectos[0].nombre);
-    }
-    testsPasados++;
-  } catch (error) {
-    Logger.log('  ❌ FALLÓ - ' + error.message);
-    testsFallados++;
-  }
-  Logger.log('');
-  
-  // ============================================
-  // TEST 2: OBTENER PROYECTO ESPECÍFICO
-  // ============================================
-  Logger.log('🔍 TEST 2: obtenerProyecto(rowIndex)');
-  try {
-    const proyectos = obtenerProyectos();
-    if (proyectos.length > 0) {
-      const proyecto = obtenerProyecto(proyectos[0].rowIndex);
-      Logger.log('  ✅ PASÓ - Proyecto: ' + proyecto.nombre);
-      Logger.log('  📊 RowIndex: ' + proyecto.rowIndex);
-      testsPasados++;
-    } else {
-      Logger.log('  ⚠️ SALTADO - No hay proyectos para probar');
-    }
-  } catch (error) {
-    Logger.log('  ❌ FALLÓ - ' + error.message);
-    testsFallados++;
-  }
-  Logger.log('');
-  
-  // ============================================
-  // TEST 3: CREAR PROYECTO TEMPORAL
-  // ============================================
-  Logger.log('➕ TEST 3: crearProyecto(nombre)');
-  let proyectoTestRowIndex = null;
-  try {
-    const proyectosAntes = obtenerProyectos().length;
-    const resultado = crearProyecto('TEST_TEMPORAL_' + new Date().getTime());
-    const proyectosDespues = obtenerProyectos().length;
-    
-    if (proyectosDespues === proyectosAntes + 1) {
-      Logger.log('  ✅ PASÓ - Proyecto creado correctamente');
-      proyectoTestRowIndex = resultado[resultado.length - 1].rowIndex;
-      Logger.log('  📊 RowIndex del proyecto test: ' + proyectoTestRowIndex);
-      testsPasados++;
-    } else {
-      throw new Error('El número de proyectos no aumentó');
-    }
-  } catch (error) {
-    Logger.log('  ❌ FALLÓ - ' + error.message);
-    testsFallados++;
-  }
-  Logger.log('');
-  
-  // ============================================
-  // TEST 4: ACTUALIZAR CAMPO
-  // ============================================
-  Logger.log('✏️ TEST 4: actualizarCampo(rowIndex, campo, valor)');
-  try {
-    if (proyectoTestRowIndex) {
-      const valorTest = 'Info de prueba - ' + new Date().toLocaleString();
-      const resultado = actualizarCampo(proyectoTestRowIndex, 'info', valorTest);
-      
-      if (resultado.info === valorTest) {
-        Logger.log('  ✅ PASÓ - Campo actualizado correctamente');
-        Logger.log('  📊 Valor guardado: ' + resultado.info.substring(0, 30) + '...');
-        testsPasados++;
-      } else {
-        throw new Error('El valor no se guardó correctamente');
-      }
-    } else {
-      Logger.log('  ⚠️ SALTADO - No hay proyecto de prueba');
-    }
-  } catch (error) {
-    Logger.log('  ❌ FALLÓ - ' + error.message);
-    testsFallados++;
-  }
-  Logger.log('');
-  
-  // ============================================
-  // TEST 5: REORDENAR PROYECTO
-  // ============================================
-  Logger.log('🔄 TEST 5: reordenarProyecto(rowIndex, nuevoOrden)');
-  try {
-    if (proyectoTestRowIndex) {
-      const ordenAntes = obtenerProyecto(proyectoTestRowIndex).orden;
-      reordenarProyecto(proyectoTestRowIndex, 1);
-      const ordenDespues = obtenerProyecto(proyectoTestRowIndex).orden;
-      
-      if (ordenDespues === 1) {
-        Logger.log('  ✅ PASÓ - Proyecto reordenado correctamente');
-        Logger.log('  📊 Orden antes: ' + ordenAntes + ', después: ' + ordenDespues);
-        testsPasados++;
-      } else {
-        throw new Error('El orden no cambió como se esperaba');
-      }
-    } else {
-      Logger.log('  ⚠️ SALTADO - No hay proyecto de prueba');
-    }
-  } catch (error) {
-    Logger.log('  ❌ FALLÓ - ' + error.message);
-    testsFallados++;
-  }
-  Logger.log('');
-  
-  // ============================================
-  // TEST 6: API DE GITHUB - EXTRAER INFO URL
-  // ============================================
-  Logger.log('🔗 TEST 6: extraerInfoGitHub(url)');
-  try {
-    const testUrl = 'https://github.com/koki81pe/CodeHubber/tree/main';
-    const info = extraerInfoGitHub(testUrl);
-    
-    if (info.user === 'koki81pe' && info.repo === 'CodeHubber' && info.branch === 'main') {
-      Logger.log('  ✅ PASÓ - Información extraída correctamente');
-      Logger.log('  📊 User: ' + info.user + ', Repo: ' + info.repo + ', Branch: ' + info.branch);
-      testsPasados++;
-    } else {
-      throw new Error('La información extraída no es correcta');
-    }
-  } catch (error) {
-    Logger.log('  ❌ FALLÓ - ' + error.message);
-    testsFallados++;
-  }
-  Logger.log('');
-  
-  // ============================================
-  // TEST 7: API DE GITHUB - GENERAR LINKLIST
-  // ============================================
-  Logger.log('🌐 TEST 7: generarLinkListDesdeTree(treeUrl)');
-  try {
-    const testUrl = 'https://github.com/koki81pe/CodeHubber/tree/main';
-    const resultado = generarLinkListDesdeTree(testUrl);
-    
-    if (resultado.success && resultado.totalArchivos > 0) {
-      Logger.log('  ✅ PASÓ - LinkList generado correctamente');
-      Logger.log('  📊 Total archivos: ' + resultado.totalArchivos);
-      Logger.log('  📊 Primeros 200 chars del LinkList:');
-      Logger.log('  ' + resultado.linkList.substring(0, 200) + '...');
-      testsPasados++;
-    } else {
-      throw new Error('No se generó el LinkList correctamente');
-    }
-  } catch (error) {
-    Logger.log('  ❌ FALLÓ - ' + error.message);
-    testsFallados++;
-  }
-  Logger.log('');
-  
-  // ============================================
-  // TEST 8: ELIMINAR PROYECTO TEMPORAL
-  // ============================================
-  Logger.log('🗑️ TEST 8: eliminarProyecto(rowIndex)');
-  try {
-    if (proyectoTestRowIndex) {
-      const proyectosAntes = obtenerProyectos().length;
-      eliminarProyecto(proyectoTestRowIndex);
-      const proyectosDespues = obtenerProyectos().length;
-      
-      if (proyectosDespues === proyectosAntes - 1) {
-        Logger.log('  ✅ PASÓ - Proyecto eliminado correctamente');
-        Logger.log('  📊 Proyectos antes: ' + proyectosAntes + ', después: ' + proyectosDespues);
-        testsPasados++;
-      } else {
-        throw new Error('El proyecto no se eliminó correctamente');
-      }
-    } else {
-      Logger.log('  ⚠️ SALTADO - No hay proyecto de prueba para eliminar');
-    }
-  } catch (error) {
-    Logger.log('  ❌ FALLÓ - ' + error.message);
-    testsFallados++;
-  }
-  Logger.log('');
-  
-  // ============================================
-  // RESUMEN
-  // ============================================
-  Logger.log('');
-  Logger.log('╔════════════════════════════════════════════════════════════╗');
-  Logger.log('║                    RESUMEN DE PRUEBAS                      ║');
-  Logger.log('╚════════════════════════════════════════════════════════════╝');
-  Logger.log('');
-  Logger.log('✅ Tests pasados: ' + testsPasados);
-  Logger.log('❌ Tests fallados: ' + testsFallados);
-  Logger.log('📊 Total de tests: ' + (testsPasados + testsFallados));
-  Logger.log('');
-  
-  if (testsFallados === 0) {
-    Logger.log('🎉🎉🎉 ¡TODOS LOS TESTS PASARON! 🎉🎉🎉');
-  } else {
-    Logger.log('⚠️ Algunos tests fallaron. Revisa los errores arriba.');
-  }
-  
-  Logger.log('');
-  Logger.log('════════════════════════════════════════════════════════════');
 }
