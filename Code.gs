@@ -1,20 +1,30 @@
-// ============================================
-// CODEHUBBER v2.5 - CODE.GS
-// Última actualización: 24/12/2024
-// Mejoras: Sistema de reintentos + Notificación de errores detallada
-// ============================================
+// MOD-001: ENCABEZADO [INICIO]
+/*
+******************************************
+PROYECTO: CodeHubber
+ARCHIVO: Code.gs
+VERSIÓN: 01.00
+FECHA: 08/02/2026 11:40 (UTC-5)
+******************************************
+*/
+// MOD-001: FIN
 
+// MOD-002: CONSTANTES GLOBALES [INICIO]
 const SPREADSHEET_ID = '1PqTYY7dOVicyhTt84y3FTMV7giJjvTy7aNqzGItZK54';
 const HOJA_PROYECTOS = 'Proyectos';
 const DRIVE_FOLDER_ID = '1uE8_iO_kXWWYRRwQepXJMp5TD4xZIXdu';
+// MOD-002: FIN
 
+// MOD-003: ROUTER PRINCIPAL [INICIO]
 // ENRUTADOR PRINCIPAL
 function doGet(e) {
   return HtmlService.createHtmlOutputFromFile('Home')
     .setTitle('CodeHubber - SolidCode Generator')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
+// MOD-003: FIN
 
+// MOD-004: FUNCIONES AUXILIARES [INICIO]
 // ============================================
 // FUNCIONES AUXILIARES
 // ============================================
@@ -33,7 +43,9 @@ function getSheet() {
     throw new Error('Error al acceder a la hoja: ' + error.message);
   }
 }
+// MOD-004: FIN
 
+// MOD-005: FETCH CON REINTENTOS - CONFIGURACIÓN Y LÓGICA PRINCIPAL [INICIO]
 // ============================================
 // FUNCIÓN AUXILIAR: FETCH CON REINTENTOS
 // ============================================
@@ -66,7 +78,9 @@ function fetchConReintentos(url, intentosMaximos) {
         Logger.log(`  ✅ Exitoso en intento ${intento}`);
         return response;
       }
-      
+// MOD-005: FIN
+
+// MOD-006: FETCH CON REINTENTOS - MANEJO DE ERRORES Y REINTENTOS [INICIO]
       // Si es 404 o similar, no reintentar (es un error permanente)
       if (responseCode >= 400 && responseCode < 500 && responseCode !== 429) {
         throw new Error(`HTTP ${responseCode} - Archivo no encontrado o sin acceso`);
@@ -100,7 +114,9 @@ function fetchConReintentos(url, intentosMaximos) {
   // Si llegamos aquí, todos los intentos fallaron
   throw ultimoError || new Error('Todos los intentos fallaron sin error específico');
 }
+// MOD-006: FIN
 
+// MOD-007: CRUD - OBTENER PROYECTOS [INICIO]
 // ============================================
 // CRUD PROYECTOS
 // ============================================
@@ -144,7 +160,9 @@ function obtenerProyectos() {
     throw new Error('Error al cargar proyectos: ' + error.message);
   }
 }
+// MOD-007: FIN
 
+// MOD-008: CRUD - OBTENER PROYECTO INDIVIDUAL [INICIO]
 // OBTENER UN PROYECTO POR ROWINDEX
 function obtenerProyecto(rowIndex) {
   try {
@@ -186,7 +204,9 @@ function obtenerProyecto(rowIndex) {
     throw new Error('Error al obtener proyecto: ' + error.message);
   }
 }
+// MOD-008: FIN
 
+// MOD-009: CRUD - CREAR PROYECTO [INICIO]
 // CREAR NUEVO PROYECTO
 function crearProyecto(nombre) {
   try {
@@ -222,7 +242,9 @@ function crearProyecto(nombre) {
     throw new Error('Error al crear proyecto: ' + error.message);
   }
 }
+// MOD-009: FIN
 
+// MOD-010: CRUD - ACTUALIZAR CAMPO [INICIO]
 // ACTUALIZAR CAMPO DE PROYECTO
 function actualizarCampo(rowIndex, campo, valor) {
   try {
@@ -272,7 +294,9 @@ function actualizarCampo(rowIndex, campo, valor) {
     throw new Error('Error al guardar: ' + error.message);
   }
 }
+// MOD-010: FIN
 
+// MOD-011: CRUD - ELIMINAR PROYECTO [INICIO]
 // ELIMINAR PROYECTO
 function eliminarProyecto(rowIndex) {
   try {
@@ -317,7 +341,9 @@ function eliminarProyecto(rowIndex) {
     throw new Error('Error al eliminar proyecto: ' + error.message);
   }
 }
+// MOD-011: FIN
 
+// MOD-012: REORDENAMIENTO - VALIDACIONES Y PREPARACIÓN [INICIO]
 // ============================================
 // REORDENAMIENTO INTELIGENTE
 // ============================================
@@ -376,7 +402,9 @@ function reordenarProyecto(rowIndex, nuevoOrden) {
     } else if (nuevoOrden <= 0) {
       nuevoOrden = 1;
     }
-    
+// MOD-012: FIN
+
+// MOD-013: REORDENAMIENTO - LÓGICA DE REORDENAMIENTO [INICIO]
     // Remover proyecto de su posición actual
     proyectos = proyectos.filter(function(p) {
       return p.rowIndex !== rowIndex;
@@ -421,7 +449,9 @@ function reordenarProyecto(rowIndex, nuevoOrden) {
     throw new Error('Error al reordenar: ' + error.message);
   }
 }
+// MOD-013: FIN
 
+// MOD-014: REORDENAMIENTO - RENUMERAR PROYECTOS [INICIO]
 // RENUMERAR TODOS LOS PROYECTOS
 function renumerarProyectos() {
   try {
@@ -439,7 +469,9 @@ function renumerarProyectos() {
     throw new Error('Error al renumerar: ' + error.message);
   }
 }
+// MOD-014: FIN
 
+// MOD-015: GOOGLE DOCS - GUARDAR SOLIDCODE [INICIO]
 // ============================================
 // FUNCIONES DE GOOGLE DOCS
 // ============================================
@@ -482,7 +514,9 @@ function guardarSolidCodeEnDoc(docId, nombre, contenido) {
     throw new Error('Error al guardar en Google Doc: ' + error.message);
   }
 }
+// MOD-015: FIN
 
+// MOD-016: GOOGLE DOCS - OBTENER SOLIDCODE [INICIO]
 function obtenerSolidCodeDeDoc(docId) {
   try {
     if (!docId || docId.trim() === '') {
@@ -496,7 +530,9 @@ function obtenerSolidCodeDeDoc(docId) {
     throw new Error('Error al leer Google Doc: ' + error.message);
   }
 }
+// MOD-016: FIN
 
+// MOD-017: GENERADOR SOLIDCODE - VALIDACIÓN E INICIALIZACIÓN [INICIO]
 // ============================================
 // GENERADOR DE SOLID CODE - VERSIÓN MEJORADA v2.5
 // ============================================
@@ -554,7 +590,9 @@ function generarSolidCodeDesdeRaw(rowIndex, rawLinkListUrl) {
     // Array para almacenar errores
     const errores = [];
     let archivosExitosos = 0;
-    
+// MOD-017: FIN
+
+// MOD-018: GENERADOR SOLIDCODE - PROCESAMIENTO DE ARCHIVOS [INICIO]
     // Generar código consolidado
     let solidCode = '// ============================================\n';
     solidCode += '// SOLID CODE - ' + proyecto.nombre.toUpperCase() + '\n';
@@ -602,7 +640,9 @@ function generarSolidCodeDesdeRaw(rowIndex, rawLinkListUrl) {
         Logger.log('❌ Archivo ' + (i + 1) + '/' + links.length + ': ' + mensajeError);
       }
     }
-    
+// MOD-018: FIN
+
+// MOD-019: GENERADOR SOLIDCODE - FINALIZACIÓN Y GUARDADO [INICIO]
     solidCode += '\n\n// ============================================\n';
     solidCode += '// FIN DEL SOLID CODE\n';
     solidCode += '// Tamaño total: ' + solidCode.length.toLocaleString() + ' caracteres\n';
@@ -652,7 +692,9 @@ function generarSolidCodeDesdeRaw(rowIndex, rawLinkListUrl) {
     };
   }
 }
+// MOD-019: FIN
 
+// MOD-020: GENERADOR - CARGAR SOLIDCODE DE DOC [INICIO]
 function cargarSolidCodeDeDoc(rowIndex) {
   try {
     // Validación de entrada
@@ -697,7 +739,9 @@ function cargarSolidCodeDeDoc(rowIndex) {
     throw new Error('Error al cargar SolidCode: ' + error.message);
   }
 }
+// MOD-020: FIN
 
+// MOD-021: GENERADOR - LINKLIST DESDE GITHUB TREE [INICIO]
 // ============================================
 // GENERADOR DE LINKLIST DESDE GITHUB TREE
 // ============================================
@@ -765,7 +809,9 @@ function generarLinkListDesdeTree(treeUrl) {
     throw new Error('Error al generar LinkList: ' + error.message);
   }
 }
+// MOD-021: FIN
 
+// MOD-022: AUXILIAR - EXTRAER INFO GITHUB [INICIO]
 // FUNCIÓN AUXILIAR: Extraer información del URL de GitHub
 function extraerInfoGitHub(url) {
   try {
@@ -790,3 +836,79 @@ function extraerInfoGitHub(url) {
     return { user: null, repo: null, branch: null };
   }
 }
+// MOD-022: FIN
+
+// MOD-023: CÓDIGO DE CIERRE [INICIO]
+// ============================================
+// CÓDIGO DE CIERRE
+// ============================================
+// MOD-023: FIN
+
+// MOD-099: NOTAS [INICIO]
+/*
+============================================
+CODEHUBBER - CODE.GS v2.5
+============================================
+
+DESCRIPCIÓN:
+Sistema de gestión de proyectos SolidCode con generación automática
+desde repositorios GitHub y almacenamiento en Google Docs.
+
+FUNCIONALIDADES PRINCIPALES:
+- CRUD completo de proyectos
+- Generación de SolidCode desde Raw LinkList
+- Generación de LinkList desde GitHub Tree
+- Sistema de reintentos para requests HTTP
+- Almacenamiento en Google Docs
+- Reordenamiento inteligente de proyectos
+
+MÓDULOS:
+MOD-001: Encabezado
+MOD-002: Constantes Globales
+MOD-003: Router Principal
+MOD-004: Funciones Auxiliares
+MOD-005: Fetch con Reintentos - Configuración
+MOD-006: Fetch con Reintentos - Manejo de Errores
+MOD-007: CRUD - Obtener Proyectos
+MOD-008: CRUD - Obtener Proyecto Individual
+MOD-009: CRUD - Crear Proyecto
+MOD-010: CRUD - Actualizar Campo
+MOD-011: CRUD - Eliminar Proyecto
+MOD-012: Reordenamiento - Validaciones
+MOD-013: Reordenamiento - Lógica
+MOD-014: Reordenamiento - Renumerar
+MOD-015: Google Docs - Guardar SolidCode
+MOD-016: Google Docs - Obtener SolidCode
+MOD-017: Generador SolidCode - Validación
+MOD-018: Generador SolidCode - Procesamiento
+MOD-019: Generador SolidCode - Finalización
+MOD-020: Generador - Cargar SolidCode de Doc
+MOD-021: Generador - LinkList desde GitHub Tree
+MOD-022: Auxiliar - Extraer Info GitHub
+MOD-023: Código de Cierre
+MOD-099: Notas
+
+DEPENDENCIAS:
+- Google Apps Script
+- Google Spreadsheet API
+- Google Drive API
+- Google Docs API
+- GitHub API (sin autenticación)
+
+ADVERTENCIAS CRÍTICAS:
+⚠️ MOD-005/006: Sistema de reintentos con delays incrementales
+⚠️ MOD-017/018/019: Manejo robusto de errores por archivo
+⚠️ MOD-021: Filtrado de archivos especiales (.git, node_modules, ocultos)
+
+HISTORIAL DE CAMBIOS:
+v2.5 (24/12/2024):
+- Sistema de reintentos mejorado
+- Alertas persistentes detalladas
+- Estadísticas de errores por archivo
+
+v1.0 (08/02/2026):
+- Remodulación según Standard CodeWorkShop v5.0
+- Código original intacto
+- Solo delimitadores agregados como comentarios
+*/
+// MOD-099: FIN
