@@ -1,3 +1,15 @@
+<!-- MOD-001: ENCABEZADO [INICIO] -->
+<!--
+******************************************
+PROYECTO: CodeHubber
+ARCHIVO: Home.html
+VERSIÓN: 01.00
+FECHA: 08/02/2026 12:12 (UTC-5)
+******************************************
+-->
+<!-- MOD-001: FIN -->
+
+<!-- MOD-002: APERTURA HTML [INICIO] -->
 <!DOCTYPE html>
 <html lang="es">
 <!-- 
@@ -11,7 +23,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CodeHubber v2.5</title>
-  
+<!-- MOD-002: FIN -->
+
+<!-- MOD-003: CSS - BASE Y RESET [INICIO] -->
   <style>
     * {
       margin: 0;
@@ -31,7 +45,11 @@
       display: flex;
       height: 100vh;
     }
+  </style>
+<!-- MOD-003: FIN -->
 
+<!-- MOD-004: CSS - SIDEBAR Y PROYECTOS [INICIO] -->
+  <style>
     /* SIDEBAR */
     .sidebar {
       width: 250px;
@@ -136,7 +154,11 @@
       flex: 1;
       font-size: 14px;
     }
+  </style>
+<!-- MOD-004: FIN -->
 
+<!-- MOD-005: CSS - CONTENIDO Y TABS [INICIO] -->
+  <style>
     /* MAIN CONTENT */
     .main-content {
       flex: 1;
@@ -186,6 +208,43 @@
       display: block;
     }
 
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #8b949e;
+    }
+
+    .empty-state h3 {
+      margin-bottom: 12px;
+      font-size: 20px;
+    }
+
+    /* MESSAGES */
+    .message {
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .message.success {
+      background: #1f6feb20;
+      border: 1px solid #1f6feb;
+      color: #58a6ff;
+    }
+
+    .message.error {
+      background: #da363320;
+      border: 1px solid #da3633;
+      color: #f85149;
+    }
+  </style>
+<!-- MOD-005: FIN -->
+
+<!-- MOD-006: CSS - FORMULARIOS Y BOTONES [INICIO] -->
+  <style>
     /* FORM ELEMENTS */
     .form-group {
       margin-bottom: 16px;
@@ -265,39 +324,21 @@
       background: #b62324;
     }
 
-    /* EMPTY STATE */
-    .empty-state {
-      text-align: center;
-      padding: 48px 24px;
-      color: #8b949e;
-    }
-
-    .empty-state h3 {
-      margin-bottom: 12px;
-      font-size: 20px;
-    }
-
-    /* MESSAGES */
-    .message {
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      border-radius: 6px;
-      font-size: 14px;
-      display: none;
-    }
-
-    .message.success {
+    /* INFO BOX */
+    .info-box {
       background: #1f6feb20;
       border: 1px solid #1f6feb;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
       color: #58a6ff;
     }
+  </style>
+<!-- MOD-006: FIN -->
 
-    .message.error {
-      background: #da363320;
-      border: 1px solid #da3633;
-      color: #f85149;
-    }
-
+<!-- MOD-007: CSS - MODALES BASE [INICIO] -->
+  <style>
     /* MODAL OVERLAY */
     .modal-overlay {
       display: none;
@@ -377,18 +418,11 @@
       color: #f85149;
       font-weight: 600;
     }
+  </style>
+<!-- MOD-007: FIN -->
 
-    /* INFO BOX */
-    .info-box {
-      background: #1f6feb20;
-      border: 1px solid #1f6feb;
-      border-radius: 6px;
-      padding: 12px;
-      margin-bottom: 16px;
-      font-size: 13px;
-      color: #58a6ff;
-    }
-
+<!-- MOD-008: CSS - ALERTAS PERSISTENTES PARTE 1 [INICIO] -->
+  <style>
     /* ====================================
        SISTEMA DE ALERTAS PERSISTENTES v2.5
        ==================================== */
@@ -509,7 +543,11 @@
       line-height: 1.6;
       margin-bottom: 16px;
     }
+  </style>
+<!-- MOD-008: FIN -->
 
+<!-- MOD-009: CSS - ALERTAS PERSISTENTES PARTE 2 [INICIO] -->
+  <style>
     .alert-stats {
       background: #0d1117;
       border: 1px solid #30363d;
@@ -625,7 +663,11 @@
     .alert-btn-secondary:hover {
       background: #30363d;
     }
+  </style>
+<!-- MOD-009: FIN -->
 
+<!-- MOD-010: CSS - LOADING Y ANIMACIONES [INICIO] -->
+  <style>
     /* Loading overlay */
     .loading-overlay {
       position: fixed;
@@ -683,6 +725,9 @@
       font-family: 'Courier New', monospace;
     }
   </style>
+<!-- MOD-010: FIN -->
+
+<!-- MOD-011: ESTRUCTURA HTML - CONTAINER Y SIDEBAR [INICIO] -->
 </head>
 <body>
   <div class="container">
@@ -698,7 +743,9 @@
         <!-- Proyectos se cargan aquí dinámicamente -->
       </div>
     </div>
+<!-- MOD-011: FIN -->
 
+<!-- MOD-012: ESTRUCTURA HTML - MAIN CONTENT Y TABS [INICIO] -->
     <!-- MAIN CONTENT -->
     <div class="main-content">
       <!-- TABS -->
@@ -720,7 +767,9 @@
 
         <!-- PROJECT CONTENT -->
         <div id="projectContent" style="display: none;">
-          
+<!-- MOD-012: FIN -->
+
+<!-- MOD-013: ESTRUCTURA HTML - TAB SOLIDCODE [INICIO] -->
           <!-- TAB: SOLIDCODE -->
           <div id="tab-solidcode" class="tab-content active">
             <div class="form-group">
@@ -748,7 +797,9 @@
               </div>
             </div>
           </div>
+<!-- MOD-013: FIN -->
 
+<!-- MOD-014: ESTRUCTURA HTML - TAB LINKLIST [INICIO] -->
           <!-- TAB: LINKLIST -->
           <div id="tab-linklist" class="tab-content">
             <div class="info-box">
@@ -772,7 +823,9 @@
               </div>
             </div>
           </div>
+<!-- MOD-014: FIN -->
 
+<!-- MOD-015: ESTRUCTURA HTML - TAB INFO [INICIO] -->
           <!-- TAB: INFO -->
           <div id="tab-info" class="tab-content">
             <div class="form-group">
@@ -810,7 +863,9 @@
       </div>
     </div>
   </div>
+<!-- MOD-015: FIN -->
 
+<!-- MOD-016: MODALES HTML - NUEVO Y ELIMINAR [INICIO] -->
   <!-- MODAL: NUEVO PROYECTO -->
   <div id="modalNuevoProyecto" class="modal-overlay">
     <div class="modal">
@@ -848,7 +903,9 @@
       </div>
     </div>
   </div>
+<!-- MOD-016: FIN -->
 
+<!-- MOD-017: OVERLAYS HTML - LOADING Y ALERTAS [INICIO] -->
   <!-- OVERLAY DE LOADING -->
   <div id="loadingOverlay" class="loading-overlay">
     <div class="loading-content">
@@ -901,12 +958,18 @@
       <button class="alert-btn alert-btn-primary" onclick="reintentar()">Reintentar</button>
     </div>
   </div>
+<!-- MOD-017: FIN -->
 
+<!-- MOD-018: JAVASCRIPT COMPLETO [INICIO] -->
   <script>
+
+// MOD-018-S01: VARIABLES E INICIALIZACIÓN [INICIO]
     console.log('=== CODEHUBBER v2.5 INICIANDO ===');
     let proyectos = [];
     let proyectoActual = null;
+// MOD-018-S01: FIN
 
+// MOD-018-S02: EVENTOS Y CARGA INICIAL [INICIO]
     window.onload = function() {
       console.log('window.onload ejecutado');
       try {
@@ -959,7 +1022,9 @@
         })
         .obtenerProyectos();
     }
+// MOD-018-S02: FIN
 
+// MOD-018-S03: RENDERIZADO DE PROYECTOS [INICIO]
     function renderizarProyectos() {
       const list = document.getElementById('projectList');
       list.innerHTML = '';
@@ -995,7 +1060,9 @@
         list.appendChild(item);
       });
     }
+// MOD-018-S03: FIN
 
+// MOD-018-S04: SELECCIÓN Y VISUALIZACIÓN [INICIO]
     function seleccionarProyecto(rowIndex) {
       google.script.run
         .withSuccessHandler(function(proyecto) {
@@ -1028,7 +1095,9 @@
         document.getElementById('solidCode').value = '';
       }
     }
+// MOD-018-S04: FIN
 
+// MOD-018-S05: GESTIÓN DE TABS [INICIO]
     function cambiarTab(tabName) {
       document.querySelectorAll('.tab').forEach(function(tab) {
         tab.classList.remove('active');
@@ -1046,19 +1115,15 @@
       
       document.getElementById('tab-' + tabName).classList.add('active');
     }
+// MOD-018-S05: FIN
 
+// MOD-018-S06: MODALES - NUEVO PROYECTO [INICIO]
     function abrirModalNuevoProyecto() {
       document.getElementById('modalNuevoProyecto').classList.add('active');
       document.getElementById('inputNombreProyecto').value = '';
       setTimeout(function() {
         document.getElementById('inputNombreProyecto').focus();
       }, 100);
-    }
-
-    function abrirModalEliminar() {
-      if (!proyectoActual) return;
-      document.getElementById('nombreProyectoEliminar').textContent = proyectoActual.nombre;
-      document.getElementById('modalEliminar').classList.add('active');
     }
 
     function cerrarModal(modalId) {
@@ -1087,6 +1152,14 @@
         .withFailureHandler(mostrarError)
         .crearProyecto(nombre);
     }
+// MOD-018-S06: FIN
+
+// MOD-018-S07: MODALES - ELIMINAR PROYECTO [INICIO]
+    function abrirModalEliminar() {
+      if (!proyectoActual) return;
+      document.getElementById('nombreProyectoEliminar').textContent = proyectoActual.nombre;
+      document.getElementById('modalEliminar').classList.add('active');
+    }
 
     function confirmarEliminar() {
       if (!proyectoActual) return;
@@ -1106,7 +1179,9 @@
         .withFailureHandler(mostrarError)
         .eliminarProyecto(proyectoActual.rowIndex);
     }
+// MOD-018-S07: FIN
 
+// MOD-018-S08: REORDENAMIENTO [INICIO]
     function reordenar(rowIndex, nuevoOrden) {
       google.script.run
         .withSuccessHandler(function(data) {
@@ -1116,7 +1191,9 @@
         .withFailureHandler(mostrarError)
         .reordenarProyecto(rowIndex, nuevoOrden);
     }
+// MOD-018-S08: FIN
 
+// MOD-018-S09: SISTEMA DE ALERTAS PERSISTENTES [INICIO]
     // ====================================
     // SISTEMA DE ALERTAS PERSISTENTES v2.5
     // ====================================
@@ -1174,6 +1251,13 @@
       document.getElementById('alertPersistent').classList.remove('active');
     }
 
+    function reintentar() {
+      cerrarAlertaPersistente();
+      generarSolidCode();
+    }
+// MOD-018-S09: FIN
+
+// MOD-018-S10: LOADING OVERLAY [INICIO]
     function mostrarLoading(texto, subtexto, progreso) {
       texto = texto || 'Procesando...';
       subtexto = subtexto || 'Por favor espera';
@@ -1188,12 +1272,9 @@
     function ocultarLoading() {
       document.getElementById('loadingOverlay').classList.remove('active');
     }
+// MOD-018-S10: FIN
 
-    function reintentar() {
-      cerrarAlertaPersistente();
-      generarSolidCode();
-    }
-
+// MOD-018-S11: GUARDAR SOLIDCODE [INICIO]
     // ====================================
     // FUNCIONES PRINCIPALES
     // ====================================
@@ -1224,58 +1305,9 @@
         .withFailureHandler(mostrarError)
         .actualizarCampo(proyectoActual.rowIndex, 'solidLink', solidLink);
     }
+// MOD-018-S11: FIN
 
-    // GUARDAR PESTAÑA INFO
-    function guardarCampoInfo() {
-      if (!proyectoActual) return;
-
-      const nombre = document.getElementById('nombreProyecto').value.trim();
-      const solidLinkInfo = document.getElementById('solidLinkInfo').value;
-      const appWebLink = document.getElementById('appWebLink').value;
-      const info = document.getElementById('info').value;
-
-      if (!nombre) {
-        mostrarMensaje('El nombre del proyecto no puede estar vacío', 'error');
-        return;
-      }
-
-      // Guardar nombre
-      google.script.run
-        .withSuccessHandler(function(proyecto) {
-          proyectoActual.nombre = proyecto.nombre;
-          renderizarProyectos();
-        })
-        .withFailureHandler(mostrarError)
-        .actualizarCampo(proyectoActual.rowIndex, 'nombre', nombre);
-
-      // Guardar solidLink
-      google.script.run
-        .withSuccessHandler(function(proyecto) {
-          proyectoActual.solidLink = proyecto.solidLink;
-          document.getElementById('solidLinkSC').value = proyecto.solidLink;
-          document.getElementById('solidLinkInfo').value = proyecto.solidLink;
-        })
-        .withFailureHandler(mostrarError)
-        .actualizarCampo(proyectoActual.rowIndex, 'solidLink', solidLinkInfo);
-
-      // Guardar appWebLink
-      google.script.run
-        .withSuccessHandler(function(proyecto) {
-          proyectoActual.appWebLink = proyecto.appWebLink;
-        })
-        .withFailureHandler(mostrarError)
-        .actualizarCampo(proyectoActual.rowIndex, 'appWebLink', appWebLink);
-
-      // Guardar info
-      google.script.run
-        .withSuccessHandler(function(proyecto) {
-          proyectoActual.info = proyecto.info;
-          mostrarMensaje('Información guardada exitosamente', 'success');
-        })
-        .withFailureHandler(mostrarError)
-        .actualizarCampo(proyectoActual.rowIndex, 'info', info);
-    }
-
+// MOD-018-S12: GENERAR SOLIDCODE [INICIO]
     // GENERAR SOLIDCODE - VERSIÓN MEJORADA
     function generarSolidCode() {
       if (!proyectoActual) return;
@@ -1339,7 +1371,9 @@
         })
         .generarSolidCodeDesdeRaw(proyectoActual.rowIndex, rawLinkListUrl);
     }
+// MOD-018-S12: FIN
 
+// MOD-018-S13: CARGAR Y ABRIR GOOGLE DOC [INICIO]
     function cargarSolidCodeDeDoc() {
       if (!proyectoActual || !proyectoActual.solidCode) {
         mostrarMensaje('No hay SolidCode guardado para este proyecto', 'error');
@@ -1374,7 +1408,62 @@
       const docUrl = 'https://docs.google.com/document/d/' + proyectoActual.solidCode + '/edit';
       window.open(docUrl, '_blank');
     }
+// MOD-018-S13: FIN
 
+// MOD-018-S14: GUARDAR INFO [INICIO]
+    // GUARDAR PESTAÑA INFO
+    function guardarCampoInfo() {
+      if (!proyectoActual) return;
+
+      const nombre = document.getElementById('nombreProyecto').value.trim();
+      const solidLinkInfo = document.getElementById('solidLinkInfo').value;
+      const appWebLink = document.getElementById('appWebLink').value;
+      const info = document.getElementById('info').value;
+
+      if (!nombre) {
+        mostrarMensaje('El nombre del proyecto no puede estar vacío', 'error');
+        return;
+      }
+
+      // Guardar nombre
+      google.script.run
+        .withSuccessHandler(function(proyecto) {
+          proyectoActual.nombre = proyecto.nombre;
+          renderizarProyectos();
+        })
+        .withFailureHandler(mostrarError)
+        .actualizarCampo(proyectoActual.rowIndex, 'nombre', nombre);
+
+      // Guardar solidLink
+      google.script.run
+        .withSuccessHandler(function(proyecto) {
+          proyectoActual.solidLink = proyecto.solidLink;
+          document.getElementById('solidLinkSC').value = proyecto.solidLink;
+          document.getElementById('solidLinkInfo').value = proyecto.solidLink;
+        })
+        .withFailureHandler(mostrarError)
+        .actualizarCampo(proyectoActual.rowIndex, 'solidLink', solidLinkInfo);
+
+      // Guardar appWebLink
+      google.script.run
+        .withSuccessHandler(function(proyecto) {
+          proyectoActual.appWebLink = proyecto.appWebLink;
+        })
+        .withFailureHandler(mostrarError)
+        .actualizarCampo(proyectoActual.rowIndex, 'appWebLink', appWebLink);
+
+      // Guardar info
+      google.script.run
+        .withSuccessHandler(function(proyecto) {
+          proyectoActual.info = proyecto.info;
+          mostrarMensaje('Información guardada exitosamente', 'success');
+        })
+        .withFailureHandler(mostrarError)
+        .actualizarCampo(proyectoActual.rowIndex, 'info', info);
+    }
+// MOD-018-S14: FIN
+
+// MOD-018-S15: GENERAR LINKLIST [INICIO]
     // PESTAÑA LINKLIST - GENERAR DESDE GITHUB
     function generarLinkListDesdeGitHub() {
       const githubTreeUrl = document.getElementById('githubTreeUrl').value.trim();
@@ -1399,7 +1488,9 @@
         .withFailureHandler(mostrarError)
         .generarLinkListDesdeTree(githubTreeUrl);
     }
+// MOD-018-S15: FIN
 
+// MOD-018-S16: FUNCIONES AUXILIARES [INICIO]
     function copiarAlPortapapeles(elementId) {
       const elemento = document.getElementById(elementId);
       elemento.select();
@@ -1424,6 +1515,133 @@
       console.error('Error:', error);
       mostrarMensaje('Error: ' + error.message, 'error');
     }
+// MOD-018-S16: FIN
+
   </script>
+<!-- MOD-018: FIN -->
+
+<!-- MOD-019: CÓDIGO DE CIERRE HTML [INICIO] -->
 </body>
 </html>
+<!-- MOD-019: FIN -->
+
+<!-- MOD-099: NOTAS [INICIO] -->
+<!--
+******************************************
+DESCRIPCIÓN:
+CodeHubber v2.5 - Generador de SolidCode
+Aplicación web para gestión de proyectos de código.
+Genera archivos consolidados (SolidCode) desde repositorios GitHub.
+
+FUNCIONALIDAD PRINCIPAL:
+- Gestión de proyectos con orden personalizable
+- Generación de SolidCode desde Raw LinkList URL
+- Generación de LinkList desde GitHub Tree API
+- Almacenamiento en Google Docs
+- Sistema de alertas persistentes para errores
+- Loading overlay durante procesos largos
+
+ESTRUCTURA DE MÓDULOS:
+MOD-001: Encabezado (metadata del proyecto)
+MOD-002: Apertura HTML (DOCTYPE, head, meta tags)
+MOD-003: CSS - Base y Reset (~60 líneas)
+MOD-004: CSS - Sidebar y Proyectos (~85 líneas)
+MOD-005: CSS - Contenido y Tabs (~75 líneas)
+MOD-006: CSS - Formularios y Botones (~80 líneas)
+MOD-007: CSS - Modales Base (~70 líneas)
+MOD-008: CSS - Alertas Persistentes Parte 1 (~85 líneas)
+MOD-009: CSS - Alertas Persistentes Parte 2 (~80 líneas)
+MOD-010: CSS - Loading y Animaciones (~50 líneas)
+MOD-011: HTML - Container y Sidebar (~30 líneas)
+MOD-012: HTML - Main Content y Tabs (~25 líneas)
+MOD-013: HTML - Tab SolidCode (~40 líneas)
+MOD-014: HTML - Tab LinkList (~28 líneas)
+MOD-015: HTML - Tab Info (~35 líneas)
+MOD-016: HTML - Modales Nuevo y Eliminar (~55 líneas)
+MOD-017: HTML - Overlays Loading y Alertas (~75 líneas)
+MOD-018: JavaScript Completo (~610 líneas)
+  MOD-018-S01: Variables e Inicialización
+  MOD-018-S02: Eventos y Carga Inicial
+  MOD-018-S03: Renderizado de Proyectos
+  MOD-018-S04: Selección y Visualización
+  MOD-018-S05: Gestión de Tabs
+  MOD-018-S06: Modales - Nuevo Proyecto
+  MOD-018-S07: Modales - Eliminar Proyecto
+  MOD-018-S08: Reordenamiento
+  MOD-018-S09: Sistema de Alertas Persistentes
+  MOD-018-S10: Loading Overlay
+  MOD-018-S11: Guardar SolidCode
+  MOD-018-S12: Generar SolidCode
+  MOD-018-S13: Cargar y Abrir Google Doc
+  MOD-018-S14: Guardar Info
+  MOD-018-S15: Generar LinkList
+  MOD-018-S16: Funciones Auxiliares
+MOD-019: Código de Cierre HTML
+MOD-099: Notas
+
+DEPENDENCIAS BACKEND (Code.gs):
+- obtenerProyectos()
+- obtenerProyecto(rowIndex)
+- crearProyecto(nombre)
+- actualizarCampo(rowIndex, campo, valor)
+- eliminarProyecto(rowIndex)
+- reordenarProyecto(rowIndex, nuevoOrden)
+- generarSolidCodeDesdeRaw(rowIndex, rawLinkListUrl)
+- cargarSolidCodeDeDoc(rowIndex)
+- generarLinkListDesdeTree(treeUrl)
+
+FUNCIONALIDADES CLAVE:
+1. Sistema de alertas persistentes v2.5:
+   - Overlay con blur backdrop
+   - Estadísticas de errores (total/exitosos/fallidos)
+   - Lista detallada de errores
+   - Botón de reintentar
+   
+2. Loading overlay mejorado:
+   - Spinner animado
+   - Texto y subtexto personalizables
+   - Indicador de progreso
+   
+3. Gestión de proyectos:
+   - Orden numérico editable inline
+   - Selección activa visual
+   - CRUD completo
+   
+4. Generación de SolidCode:
+   - Fetch con reintentos en backend
+   - Manejo robusto de errores
+   - Almacenamiento en Google Docs
+   - Reporte detallado de archivos fallidos
+
+ADVERTENCIAS:
+- MOD-018: Todo el JavaScript está en UN SOLO bloque <script>
+  para evitar problemas de ejecución. Los submódulos son solo
+  comentarios organizativos, NO bloques separados.
+  
+- MOD-003 a MOD-010: CSS dividido en 8 bloques <style> separados
+  para mejor organización. Esto es SEGURO en HTML.
+  
+- Sistema de alertas requiere elementos con IDs específicos:
+  alertOverlay, alertPersistent, alertIcon, alertTitle, 
+  alertMessage, alertStats, alertDetails, alertDetailsList
+
+CHANGELOG:
+v2.5 (24/12/2024):
+- Sistema de alertas persistentes
+- Loading overlay mejorado
+- Estadísticas de errores detalladas
+- Reintentos automáticos en backend
+
+v2.0 (Anterior):
+- Interfaz GitHub-style
+- Reordenamiento drag-and-drop
+- Integración Google Docs
+- Generador LinkList desde GitHub API
+
+v1.0 (Inicial):
+- CRUD básico de proyectos
+- Generador SolidCode simple
+- Almacenamiento en Sheets
+******************************************
+-->
+<!-- MOD-099: FIN -->
