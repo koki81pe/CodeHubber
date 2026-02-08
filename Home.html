@@ -3,8 +3,8 @@
 ******************************************
 PROYECTO: CodeHubber
 ARCHIVO: Home.html
-VERSIÓN: 01.00
-FECHA: 08/02/2026 12:12 (UTC-5)
+VERSIÓN: 01.01
+FECHA: 08/02/2026 15:57 (UTC-5)
 ******************************************
 -->
 <!-- MOD-001: FIN -->
@@ -781,10 +781,11 @@ FECHA: 08/02/2026 12:12 (UTC-5)
               <label>📄 SolidCode Generado</label>
               <textarea id="solidCode" readonly></textarea>
               <div class="button-group">
-                <button class="btn btn-primary" onclick="generarSolidCode()">⚡ Generar SolidCode</button>
-                <button class="btn btn-secondary" onclick="cargarSolidCodeDeDoc()">📥 Cargar desde Google Doc</button>
-                <button class="btn btn-secondary" onclick="abrirGoogleDoc()">📝 Abrir Google Doc</button>
-                <button class="btn btn-secondary" onclick="copiarAlPortapapeles('solidCode')">📋 Copiar</button>
+                <button class="btn btn-primary" onclick="generarSolidCode()">Generar</button>
+                <button class="btn btn-secondary" onclick="cargarSolidCodeDeDoc()">Cargar</button>
+                <button class="btn btn-secondary" onclick="abrirGoogleDoc()">Abrir</button>
+                <button class="btn btn-secondary" onclick="copiarAlPortapapeles('solidCode')">Copiar</button>
+                <button class="btn btn-secondary" onclick="copiarPdfLink()">PDF</button>
               </div>
             </div>
 
@@ -792,8 +793,8 @@ FECHA: 08/02/2026 12:12 (UTC-5)
               <label>🔗 Link a SolidCode (Compartir)</label>
               <input type="text" id="solidLinkSC">
               <div class="button-group">
-                <button class="btn btn-primary" onclick="guardarCampoSolidCode()">💾 Guardar Links</button>
-                <button class="btn btn-secondary" onclick="copiarAlPortapapeles('solidLinkSC')">📋 Copiar</button>
+                <button class="btn btn-primary" onclick="guardarCampoSolidCode()">Guardar</button>
+                <button class="btn btn-secondary" onclick="copiarAlPortapapeles('solidLinkSC')">Copiar</button>
               </div>
             </div>
           </div>
@@ -1516,6 +1517,27 @@ FECHA: 08/02/2026 12:12 (UTC-5)
       mostrarMensaje('Error: ' + error.message, 'error');
     }
 // MOD-018-S16: FIN
+
+// MOD-018-S17: COPIAR PDF LINK [INICIO]
+    function copiarPdfLink() {
+      if (!proyectoActual || !proyectoActual.solidCode) {
+        mostrarMensaje('No hay un Google Doc asociado a este proyecto', 'error');
+        return;
+      }
+      
+      const pdfUrl = 'https://docs.google.com/document/d/' + proyectoActual.solidCode + '/export?format=pdf';
+      
+      // Copiar al portapapeles
+      const tempInput = document.createElement('input');
+      tempInput.value = pdfUrl;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      
+      mostrarMensaje('Link PDF copiado al portapapeles', 'success');
+    }
+// MOD-018-S17: FIN
 
   </script>
 <!-- MOD-018: FIN -->
